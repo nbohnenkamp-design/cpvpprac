@@ -2,8 +2,9 @@ name: CPVPSingleBiome
 version: '${project.version}'
 main: com.cpvpprac.singlebio.CPVPSingleBiome
 api-version: '1.21'
-authors: [nbohnenkamp-design]
-description: Single-Biome worlds for Crystal PvP / Practice
+author: Norbert Bohnenkamp
+website: https://cpvpprac.eu
+description: Crystal-PvP focused single-biome terrain generator with reset and Chunky integration.
 softdepend: [Chunky]
 loadbefore: [Multiverse-Core]
 

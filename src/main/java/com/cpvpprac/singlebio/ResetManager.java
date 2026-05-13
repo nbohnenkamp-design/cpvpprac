@@ -156,6 +156,10 @@ public class ResetManager {
                     "mv import " + worldName + " " + env + " -g CPVPSingleBiome:" + biomeKey);
             plugin.getLogger().info("mv import issued for: " + worldName);
 
+            // Keep autoload:false so MV doesn't try to load this world before
+            // CPVPSingleBiome is enabled on the next restart.
+            plugin.trySetMVAutoloadFalse(worldName);
+
             // Step 8: chunky pregeneration
             startChunky(worldName);
 
