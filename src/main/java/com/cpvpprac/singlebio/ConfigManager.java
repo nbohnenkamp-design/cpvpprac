@@ -103,8 +103,10 @@ public class ConfigManager {
         List<ResetManager.Warning> warnings = new ArrayList<>();
         List<Map<?, ?>> raw = config.getMapList("reset.warnings");
         for (Map<?, ?> entry : raw) {
-            int minutes = (int) entry.getOrDefault("minutes", 0);
-            String message = (String) entry.getOrDefault("message", "");
+            Object mObj = entry.get("minutes");
+            Object msgObj = entry.get("message");
+            int minutes = (mObj instanceof Number) ? ((Number) mObj).intValue() : 0;
+            String message = (msgObj instanceof String) ? (String) msgObj : "";
             if (minutes > 0 && !message.isEmpty()) {
                 warnings.add(new ResetManager.Warning(minutes, message));
             }
