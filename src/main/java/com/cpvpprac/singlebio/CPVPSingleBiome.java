@@ -147,14 +147,14 @@ public class CPVPSingleBiome extends JavaPlugin implements Listener {
             if ((Boolean) isSuccess.invoke(obj))
                 return obj.getClass().getMethod("get").invoke(obj);
             return null;
-        } catch (NoSuchMethodException ignored) {}
+        } catch (Exception ignored) {}
         // Java Optional: isPresent() + get()
         try {
             Method isPresent = obj.getClass().getMethod("isPresent");
             if ((Boolean) isPresent.invoke(obj))
                 return obj.getClass().getMethod("get").invoke(obj);
             return null;
-        } catch (NoSuchMethodException ignored) {}
+        } catch (Exception ignored) {}
         return obj; // direct return
     }
 
