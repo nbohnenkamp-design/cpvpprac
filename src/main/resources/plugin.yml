@@ -2,10 +2,11 @@ name: CPVPSingleBiome
 version: '${project.version}'
 main: com.cpvpprac.singlebio.CPVPSingleBiome
 api-version: '1.21'
+load: STARTUP
 authors: [nbohnenkamp-design]
 description: Single-Biome worlds for Crystal PvP / Practice
-depend: [Multiverse-Core]
 softdepend: [Chunky]
+loadbefore: [Multiverse-Core]
 
 world-generators:
   CPVPSingleBiome: com.cpvpprac.singlebio.CPVPSingleBiome
