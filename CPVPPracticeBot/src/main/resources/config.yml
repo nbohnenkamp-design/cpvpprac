@@ -1,0 +1,96 @@
+# CPVPPracticeBot Configuration
+# Target server: cpvpprac.eu / cpvpprac.net  |  Paper 1.21.1
+
+bot:
+  # Display name shown above the bot (supports & colour codes)
+  name: "&5Practice Bot"
+
+  # Entity type — HUSK is recommended: daylight-immune, no burning
+  entity-type: HUSK
+
+  armor:
+    # NONE | DIAMOND | NETHERITE
+    type: DIAMOND
+    # NONE | PROTECTION_4 | BLAST_PROTECTION_4
+    enchantment: PROTECTION_4
+
+  # Cancel all incoming damage so the bot never dies
+  unlimited-health: true
+
+  # Cancel all velocity changes (knockback, explosions) applied to the bot
+  anti-knockback: true
+
+  follow:
+    # Whether follow mode is active when the bot first spawns
+    enabled-by-default: true
+    # Bot begins moving when further than this many blocks from its owner
+    distance: 3.0
+    # Movement speed in blocks per tick (vanilla walk ~0.21)
+    movement-speed: 0.35
+
+  attack:
+    # Whether attack mode is active when the bot first spawns
+    enabled-by-default: false
+    # Maximum distance in blocks at which the bot will swing at its owner
+    reach: 3.0
+    # Attacks per second  (1.0 = one hit per second)
+    speed: 1.0
+
+  shield:
+    # Give the bot a shield in its off-hand (visual only in this version)
+    enabled: false
+
+  # Name of the kit applied automatically when /bot spawn is used.
+  # Must match a key under the kits: section below.
+  default-kit: diamond_prot4
+
+messages:
+  prefix: "&5[PracticeBot]&r "
+
+# ---------------------------------------------------------------------------
+# Named equipment kits.
+# Apply with:  /bot kit <name>
+# List all:    /bot kits
+#
+# armor:        NONE | DIAMOND | NETHERITE
+# armor-enchant: NONE | PROTECTION_4 | BLAST_PROTECTION_4
+# weapon:       NONE | DIAMOND_SWORD | NETHERITE_SWORD | DIAMOND_AXE | NETHERITE_AXE
+# sharpness:    0-5  (Sharpness level added to the weapon; 0 = no enchant)
+# shield:       true | false
+# totems:       integer — tracked count for future AutoTotem support
+# effects:      map of PotionEffectType name → amplifier (0 = level I, 1 = level II)
+#               Supported names: SPEED, STRENGTH, SLOW_FALLING, RESISTANCE
+# ---------------------------------------------------------------------------
+kits:
+
+  diamond_prot4:
+    armor: DIAMOND
+    armor-enchant: PROTECTION_4
+    weapon: DIAMOND_SWORD
+    sharpness: 5
+    shield: false
+    totems: 2
+    effects:
+      SPEED: 0        # Speed I
+
+  netherite_prot4:
+    armor: NETHERITE
+    armor-enchant: PROTECTION_4
+    weapon: NETHERITE_SWORD
+    sharpness: 5
+    shield: false
+    totems: 2
+    effects:
+      SPEED: 0        # Speed I
+      STRENGTH: 0     # Strength I
+
+  netherite_bprot4:
+    armor: NETHERITE
+    armor-enchant: BLAST_PROTECTION_4
+    weapon: NETHERITE_SWORD
+    sharpness: 5
+    shield: false
+    totems: 3
+    effects:
+      SPEED: 0        # Speed I
+      SLOW_FALLING: 0 # Slow Falling I
