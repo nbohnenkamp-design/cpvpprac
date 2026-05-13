@@ -128,7 +128,6 @@ public class ResetManager {
         }
 
         // Step 3: mv remove if registered
-        plugin.unmarkGeneratorApplied(worldName); // allow fresh tracking on recreate
         if (isMVWorld(worldName)) {
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv remove " + worldName);
             plugin.getLogger().info("mv remove issued for: " + worldName);
@@ -148,13 +147,17 @@ public class ResetManager {
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             createWorld(worldName);
 
-            // Step 7: mv import — no -g flag: world is already loaded by WorldCreator
-            // with the correct generator. MV just wraps the existing Bukkit world.
-            // Using -g here would put CPVPSingleBiome:<biome> in MV's worlds.yml,
-            // which causes "Plugin not enabled" warnings on future restarts.
+            // Step 7: mv import with -g to document the generator in MV's worlds.yml.
+            // The world is already loaded by WorldCreator with the correct generator,
+            // so MV merely wraps the existing Bukkit world.
+            // Immediately after, set autoload: false so CPVPSingleBiome (not MV)
+            // loads this world on future restarts, avoiding "Plugin not enabled" warnings.
             String env = getEnvironmentArg(worldName);
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv import " + worldName + " " + env);
+            String biomeKey = SingleBiomeChunkGenerator.BiomeType.fromKey(worldName).configKey();
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                    "mv import " + worldName + " " + env + " -g CPVPSingleBiome:" + biomeKey);
             plugin.getLogger().info("mv import issued for: " + worldName);
+            plugin.setMVAutoload(worldName, false);
 
             // Step 8: chunky pregeneration
             startChunky(worldName);
@@ -259,17 +262,12 @@ public class ResetManager {
                 ? World.Environment.THE_END
                 : World.Environment.NORMAL;
 
-        // Mark BEFORE createWorld so the WorldLoadEvent listener knows
-        // not to queue a redundant reload for this world.
-        plugin.markGeneratorApplied(worldName);
-
         WorldCreator creator = new WorldCreator(worldName);
         creator.environment(env);
         creator.generator(new com.cpvpprac.singlebio.generator.SingleBiomeChunkGenerator(
                 plugin.getConfigManager(), biomeType));
         World created = creator.createWorld();
         if (created == null) {
-            plugin.unmarkGeneratorApplied(worldName);
             plugin.getLogger().severe("Failed to create world: " + worldName);
         } else {
             plugin.getLogger().info("World created with generator: " + worldName);

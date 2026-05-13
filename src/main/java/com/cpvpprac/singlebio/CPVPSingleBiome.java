@@ -4,50 +4,47 @@ import com.cpvpprac.singlebio.generator.SingleBiomeChunkGenerator;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
-public class CPVPSingleBiome extends JavaPlugin implements Listener {
+public class CPVPSingleBiome extends JavaPlugin {
 
     private static CPVPSingleBiome instance;
     private ConfigManager configManager;
     private ResetManager resetManager;
 
-    /**
-     * Tracks worlds that WE loaded with the correct generator.
-     * Used by WorldLoadEvent to decide whether a reload is needed.
-     * Must be populated BEFORE WorldCreator.createWorld() is called.
-     */
-    private final Set<String> generatorAppliedWorlds = new HashSet<>();
+    // -------------------------------------------------------------------------
+    // onLoad — runs before ANY plugin's onEnable, including Multiverse-Core.
+    // We set autoload: false for all configured arena worlds so MV's onEnable
+    // reads the modified worlds.yml and skips those worlds entirely.
+    // CPVPSingleBiome then loads them itself in onEnable with the correct generator.
+    // -------------------------------------------------------------------------
+
+    @Override
+    public void onLoad() {
+        saveDefaultConfig();
+        setMVAutoload(readEnabledWorldsFromConfig(), false);
+    }
 
     @Override
     public void onEnable() {
         instance = this;
-        saveDefaultConfig();
+        // Config already saved in onLoad; ConfigManager re-reads from disk
         configManager = new ConfigManager(this);
         resetManager = new ResetManager(this, configManager);
 
-        // Register WorldLoadEvent before scheduler so we catch everything
-        getServer().getPluginManager().registerEvents(this, this);
+        // Load arena worlds that MV skipped (autoload: false set in onLoad)
+        loadArenaWorlds();
 
         resetManager.startScheduler();
         getCommand("cpvp").setExecutor(new CommandHandler(this, configManager, resetManager));
-
-        // Remove generator strings from MV worlds.yml so MV stops
-        // trying to resolve CPVPSingleBiome before we are enabled.
-        // Takes effect from the NEXT restart onward.
-        clearMVGeneratorStrings();
-
         getLogger().info("CPVPSingleBiome enabled.");
     }
 
@@ -65,30 +62,16 @@ public class CPVPSingleBiome extends JavaPlugin implements Listener {
     }
 
     // -------------------------------------------------------------------------
-    // WorldLoadEvent — fixes any arena world loaded without our generator
+    // Startup world loading
     // -------------------------------------------------------------------------
 
-    @EventHandler
-    public void onWorldLoad(WorldLoadEvent event) {
-        String worldName = event.getWorld().getName();
-        if (!configManager.getEnabledWorlds().contains(worldName)) return;
-        if (generatorAppliedWorlds.contains(worldName)) return; // We loaded it — generator is correct
-
-        // This world was loaded by Multiverse (or something else) before our generator
-        // was available. Schedule a reload on the next tick — cannot unload during load event.
-        getLogger().info("[WorldFix] '" + worldName + "' was loaded without our generator — queuing reload.");
-        getServer().getScheduler().runTask(this, () -> {
-            World w = Bukkit.getWorld(worldName);
-            if (w == null || generatorAppliedWorlds.contains(worldName)) return;
-
-            // Move players away (should be none during startup or reset)
-            World fallback = Bukkit.getWorld(configManager.getFallbackWorld());
-            for (Player p : w.getPlayers()) {
-                if (fallback != null) p.teleport(fallback.getSpawnLocation());
+    private void loadArenaWorlds() {
+        for (String worldName : configManager.getEnabledWorlds()) {
+            if (Bukkit.getWorld(worldName) != null) {
+                // Unlikely after autoload:false fix, but handle gracefully
+                getLogger().info("[Startup] World already loaded: " + worldName);
+                continue;
             }
-
-            generatorAppliedWorlds.add(worldName); // Mark BEFORE create so next WorldLoadEvent skips
-            Bukkit.unloadWorld(w, true);
 
             SingleBiomeChunkGenerator.BiomeType biomeType =
                     SingleBiomeChunkGenerator.BiomeType.fromKey(worldName);
@@ -98,61 +81,70 @@ public class CPVPSingleBiome extends JavaPlugin implements Listener {
             WorldCreator creator = new WorldCreator(worldName);
             creator.environment(env);
             creator.generator(new SingleBiomeChunkGenerator(configManager, biomeType));
+
             World loaded = creator.createWorld();
-
             if (loaded != null) {
-                getLogger().info("[WorldFix] Generator now active for: " + worldName);
+                getLogger().info("[Startup] Arena world loaded: " + worldName);
             } else {
-                getLogger().warning("[WorldFix] Failed to reload world: " + worldName);
-                generatorAppliedWorlds.remove(worldName);
+                getLogger().warning("[Startup] Failed to load arena world: " + worldName);
             }
-        });
+        }
     }
 
     // -------------------------------------------------------------------------
-    // Generator-Set — ResetManager marks worlds here before creating them
+    // MV autoload helper — called from onLoad (List) and ResetManager (single)
     // -------------------------------------------------------------------------
 
-    public void markGeneratorApplied(String worldName) {
-        generatorAppliedWorlds.add(worldName);
+    /**
+     * Sets autoload for a single world in Multiverse-Core/worlds.yml.
+     * Called by ResetManager after mv import to keep autoload: false.
+     */
+    public void setMVAutoload(String worldName, boolean autoload) {
+        setMVAutoload(List.of(worldName), autoload);
     }
 
-    public void unmarkGeneratorApplied(String worldName) {
-        generatorAppliedWorlds.remove(worldName);
-    }
-
-    // -------------------------------------------------------------------------
-    // Remove CPVPSingleBiome generator strings from MV's worlds.yml so MV
-    // never tries to resolve them at startup. Worlds are loaded by us via
-    // WorldCreator (correct generator) + mv import (no -g flag).
-    // Effect: from the NEXT restart onward, no "Plugin not enabled" warning.
-    // -------------------------------------------------------------------------
-
-    private void clearMVGeneratorStrings() {
+    private void setMVAutoload(List<String> worldNames, boolean autoload) {
         File mvWorldsFile = new File(getDataFolder().getParentFile(), "Multiverse-Core/worlds.yml");
         if (!mvWorldsFile.exists()) return;
 
         YamlConfiguration mvConfig = YamlConfiguration.loadConfiguration(mvWorldsFile);
         boolean modified = false;
 
-        for (String worldName : configManager.getEnabledWorlds()) {
-            String path = "worlds." + worldName + ".generator";
-            String generator = mvConfig.getString(path, "");
-            if (generator != null && generator.startsWith("CPVPSingleBiome")) {
-                mvConfig.set(path, null);
+        for (String worldName : worldNames) {
+            String sectionPath = "worlds." + worldName;
+            if (!mvConfig.contains(sectionPath)) continue; // World not yet in MV — nothing to do
+
+            String autoloadPath = sectionPath + ".autoload";
+            if (mvConfig.getBoolean(autoloadPath, true) != autoload) {
+                mvConfig.set(autoloadPath, autoload);
                 modified = true;
-                getLogger().info("[MVFix] Cleared generator string for '" + worldName + "' in MV worlds.yml.");
+                getLogger().info("[MVConfig] " + worldName + ": autoload=" + autoload);
             }
         }
 
         if (modified) {
             try {
                 mvConfig.save(mvWorldsFile);
-                getLogger().info("[MVFix] Multiverse worlds.yml updated — no generator warnings on next restart.");
             } catch (IOException e) {
-                getLogger().warning("[MVFix] Could not save Multiverse worlds.yml: " + e.getMessage());
+                getLogger().warning("[MVConfig] Could not save MV worlds.yml: " + e.getMessage());
             }
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Config bootstrap — used in onLoad before ConfigManager is available
+    // -------------------------------------------------------------------------
+
+    private List<String> readEnabledWorldsFromConfig() {
+        List<String> worlds = new ArrayList<>();
+        FileConfiguration config = getConfig();
+        if (!config.isConfigurationSection("worlds")) return worlds;
+        for (String key : config.getConfigurationSection("worlds").getKeys(false)) {
+            if (config.getBoolean("worlds." + key + ".enabled", false)) {
+                worlds.add(key);
+            }
+        }
+        return worlds;
     }
 
     // -------------------------------------------------------------------------
