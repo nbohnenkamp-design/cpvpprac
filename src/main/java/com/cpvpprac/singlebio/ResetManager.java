@@ -147,17 +147,14 @@ public class ResetManager {
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             createWorld(worldName);
 
-            // Step 7: mv import with -g to document the generator in MV's worlds.yml.
-            // The world is already loaded by WorldCreator with the correct generator,
-            // so MV merely wraps the existing Bukkit world.
-            // Immediately after, set autoload: false so CPVPSingleBiome (not MV)
-            // loads this world on future restarts, avoiding "Plugin not enabled" warnings.
+            // Step 7: mv import with -g so the generator is documented in MV's worlds.yml.
+            // The world is already loaded via WorldCreator with the correct generator;
+            // MV only wraps the existing Bukkit world here.
             String env = getEnvironmentArg(worldName);
             String biomeKey = SingleBiomeChunkGenerator.BiomeType.fromKey(worldName).configKey();
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
                     "mv import " + worldName + " " + env + " -g CPVPSingleBiome:" + biomeKey);
             plugin.getLogger().info("mv import issued for: " + worldName);
-            plugin.setMVAutoload(worldName, false);
 
             // Step 8: chunky pregeneration
             startChunky(worldName);
