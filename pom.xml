@@ -4,10 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.cpvpprac</groupId>
-    <artifactId>CPVPSingleBiome</artifactId>
+    <groupId>eu.cpvpprac</groupId>
+    <artifactId>CPVPPracticeBot</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
+
+    <name>CPVPPracticeBot</name>
+    <description>Crystal PvP practice bot plugin for Paper 1.21.1</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -32,8 +35,8 @@
     </dependencies>
 
     <build>
+        <finalName>CPVPPracticeBot-${project.version}</finalName>
         <defaultGoal>clean package</defaultGoal>
-        <finalName>CPVPSingleBiome</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -43,6 +46,11 @@
                     <source>21</source>
                     <target>21</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
             </plugin>
         </plugins>
         <resources>

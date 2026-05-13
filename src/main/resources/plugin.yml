@@ -1,23 +1,22 @@
-name: CPVPSingleBiome
+name: CPVPPracticeBot
 version: '${project.version}'
-main: com.cpvpprac.singlebio.CPVPSingleBiome
+main: eu.cpvpprac.practicebot.CPVPPracticeBotPlugin
 api-version: '1.21'
-author: Norbert Bohnenkamp
+authors:
+  - cpvpprac
 website: https://cpvpprac.eu
-description: Crystal-PvP focused single-biome terrain generator with reset and Chunky integration.
-softdepend: [Chunky]
-loadbefore: [Multiverse-Core]
-
-world-generators:
-  CPVPSingleBiome: com.cpvpprac.singlebio.CPVPSingleBiome
+description: Crystal PvP practice bot for cpvpprac.eu / cpvpprac.net
 
 commands:
-  cpvpsb:
-    description: CPVPSingleBiome admin commands
-    usage: /<command> reset <status|reload|now|<world>> | chunky <start <world>|start-all>
-    permission: cpvpsb.admin
+  bot:
+    description: Practice bot commands
+    usage: /<command> <spawn|remove|tp|bring|attack|follow|reload>
+    permission: cpvppracticebot.use
 
 permissions:
-  cpvpsb.admin:
-    description: Admin access to CPVPSingleBiome
+  cpvppracticebot.use:
+    description: Allows spawning and controlling a personal practice bot
+    default: op
+  cpvppracticebot.reload:
+    description: Allows reloading the plugin configuration
     default: op

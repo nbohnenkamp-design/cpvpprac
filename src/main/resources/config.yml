@@ -1,114 +1,44 @@
-# CPVPSingleBiome Configuration
+# CPVPPracticeBot Configuration
 
-worlds:
-  plains:
-    enabled: true
-    biome: PLAINS
-    terrain:
-      base-height: 64
-      flatness: 0.6
-      height-variation: 14
-      noise-scale: 0.004
-      noise-octaves: 6
-    decorations:
-      enabled: true
-      grass-density: 0.35
-      flower-density: 0.08
-      tree-density: 0.03
+bot:
+  # Display name of the bot (supports & color codes)
+  name: "&5Practice Bot"
 
-  desert:
-    enabled: true
-    biome: DESERT
-    terrain:
-      base-height: 64
-      flatness: 0.55
-      height-variation: 12
-      noise-scale: 0.004
-      noise-octaves: 6
-    decorations:
-      enabled: true
-      cactus-density: 0.015
-      dead-bush-density: 0.04
-      tree-density: 0.0
+  # Entity type — only HUSK is supported in this version; Husks are daylight-immune
+  entity-type: HUSK
 
-  badlands:
-    enabled: true
-    biome: BADLANDS
-    terrain:
-      base-height: 66
-      flatness: 0.45
-      height-variation: 18
-      noise-scale: 0.005
-      noise-octaves: 6
-    decorations:
-      enabled: true
-      dead-bush-density: 0.02
-      tree-density: 0.0
+  armor:
+    # NONE, DIAMOND, or NETHERITE
+    type: DIAMOND
+    # NONE, PROTECTION_4, or BLAST_PROTECTION_4
+    enchantment: PROTECTION_4
 
-  snow:
-    enabled: true
-    biome: SNOWY_PLAINS
-    terrain:
-      base-height: 64
-      flatness: 0.65
-      height-variation: 10
-      noise-scale: 0.004
-      noise-octaves: 6
-    decorations:
-      enabled: false
-      tree-density: 0.01
+  # Restore full health after every hit so the bot never dies
+  unlimited-health: true
 
-  mushroom:
-    enabled: true
-    biome: MUSHROOM_FIELDS
-    terrain:
-      base-height: 64
-      flatness: 0.7
-      height-variation: 8
-      noise-scale: 0.004
-      noise-octaves: 6
-    decorations:
-      enabled: true
-      mushroom-density: 0.04
-      tree-density: 0.0
+  # Cancel all incoming velocity (knockback / explosion push) for the bot
+  anti-knockback: true
 
-  end:
-    enabled: true
-    biome: THE_END
-    terrain:
-      base-height: 60
-      flatness: 0.5
-      height-variation: 12
-      noise-scale: 0.005
-      noise-octaves: 6
-    decorations:
-      enabled: false
-      tree-density: 0.0
+  follow:
+    # Whether follow mode is active when the bot first spawns
+    enabled-by-default: true
+    # Bot starts moving when further than this many blocks from its owner
+    distance: 3.0
+    # Movement speed in blocks per tick (default player walk speed is 0.21)
+    movement-speed: 0.35
 
-reset:
-  enabled: true
-  time: "04:00"
-  fallback-world: "world"
-  delay-between-worlds-seconds: 5
-  backup:
+  attack:
+    # Whether attack mode is active when the bot first spawns
+    enabled-by-default: false
+    # Maximum distance in blocks at which the bot will hit its owner
+    reach: 3.0
+    # Attacks per second (1.0 = one hit every second)
+    speed: 1.0
+
+  shield:
+    # Give the bot a shield in its off-hand
+    # Note: actual blocking behaviour requires NMS and is not implemented yet
     enabled: false
-    directory: "world-backups"
-  warnings:
-    - minutes: 10
-      message: "§e[CPVPSingleBiome] §fArena reset in §e10 minutes§f!"
-    - minutes: 5
-      message: "§6[CPVPSingleBiome] §fArena reset in §65 minutes§f!"
-    - minutes: 1
-      message: "§c[CPVPSingleBiome] §fArena reset in §c1 minute§f!"
 
-chunky:
-  enabled: true
-  radius: 500
-  shape: "circle"
-  timeout-minutes: 30
-
-maintenance:
-  enabled: true
-  kick-message: "§c[CPVPSingleBiome] §fServer is resetting arenas. Please reconnect shortly."
-  broadcast-on: "§c[CPVPSingleBiome] §fMaintenance started — arenas are resetting."
-  broadcast-off: "§a[CPVPSingleBiome] §fArenas reset complete. Maintenance ended."
+messages:
+  prefix: "&5[PracticeBot]&r "
