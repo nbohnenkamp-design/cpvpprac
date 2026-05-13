@@ -1,0 +1,114 @@
+# CPVPSingleBiome Configuration
+
+worlds:
+  plains:
+    enabled: true
+    biome: PLAINS
+    terrain:
+      base-height: 64
+      flatness: 0.6
+      height-variation: 14
+      noise-scale: 0.004
+      noise-octaves: 6
+    decorations:
+      enabled: true
+      grass-density: 0.35
+      flower-density: 0.08
+      tree-density: 0.03
+
+  desert:
+    enabled: true
+    biome: DESERT
+    terrain:
+      base-height: 64
+      flatness: 0.55
+      height-variation: 12
+      noise-scale: 0.004
+      noise-octaves: 6
+    decorations:
+      enabled: true
+      cactus-density: 0.015
+      dead-bush-density: 0.04
+      tree-density: 0.0
+
+  badlands:
+    enabled: true
+    biome: BADLANDS
+    terrain:
+      base-height: 66
+      flatness: 0.45
+      height-variation: 18
+      noise-scale: 0.005
+      noise-octaves: 6
+    decorations:
+      enabled: true
+      dead-bush-density: 0.02
+      tree-density: 0.0
+
+  snow:
+    enabled: true
+    biome: SNOWY_PLAINS
+    terrain:
+      base-height: 64
+      flatness: 0.65
+      height-variation: 10
+      noise-scale: 0.004
+      noise-octaves: 6
+    decorations:
+      enabled: false
+      tree-density: 0.01
+
+  mushroom:
+    enabled: true
+    biome: MUSHROOM_FIELDS
+    terrain:
+      base-height: 64
+      flatness: 0.7
+      height-variation: 8
+      noise-scale: 0.004
+      noise-octaves: 6
+    decorations:
+      enabled: true
+      mushroom-density: 0.04
+      tree-density: 0.0
+
+  end:
+    enabled: true
+    biome: THE_END
+    terrain:
+      base-height: 60
+      flatness: 0.5
+      height-variation: 12
+      noise-scale: 0.005
+      noise-octaves: 6
+    decorations:
+      enabled: false
+      tree-density: 0.0
+
+reset:
+  enabled: true
+  time: "04:00"
+  fallback-world: "world"
+  delay-between-worlds-seconds: 5
+  backup:
+    enabled: false
+    directory: "world-backups"
+  warnings:
+    - minutes: 10
+      message: "§e[CPVPSingleBiome] §fArena reset in §e10 minutes§f!"
+    - minutes: 5
+      message: "§6[CPVPSingleBiome] §fArena reset in §65 minutes§f!"
+    - minutes: 1
+      message: "§c[CPVPSingleBiome] §fArena reset in §c1 minute§f!"
+
+chunky:
+  enabled: true
+  radius: 500
+  shape: "circle"
+  timeout-minutes: 30
+
+maintenance:
+  enabled: true
+  kick-message: "§c[CPVPSingleBiome] §fServer is resetting arenas. Please reconnect shortly."
+  broadcast-on: "§c[CPVPSingleBiome] §fMaintenance started — arenas are resetting."
+  broadcast-off: "§a[CPVPSingleBiome] §fArenas reset complete. Maintenance ended."

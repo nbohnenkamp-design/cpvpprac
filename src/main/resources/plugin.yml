@@ -1,0 +1,22 @@
+name: CPVPSingleBiome
+version: '${project.version}'
+main: com.cpvpprac.singlebio.CPVPSingleBiome
+api-version: '1.21'
+authors: [nbohnenkamp-design]
+description: Single-Biome worlds for Crystal PvP / Practice
+depend: [Multiverse-Core]
+softdepend: [Chunky]
+
+world-generators:
+  CPVPSingleBiome: com.cpvpprac.singlebio.CPVPSingleBiome
+
+commands:
+  cpvp:
+    description: CPVPSingleBiome admin commands
+    usage: /<command> <reset|resetall|status|reload>
+    permission: cpvp.admin
+
+permissions:
+  cpvp.admin:
+    description: Admin access to CPVPSingleBiome
+    default: op
