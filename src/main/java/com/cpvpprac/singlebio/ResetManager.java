@@ -9,7 +9,6 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalTime;
@@ -127,12 +126,11 @@ public class ResetManager {
             Bukkit.unloadWorld(world, false);
         }
 
-        // Step 3: mv remove if registered
-        if (isMVWorld(worldName)) {
+        // Step 3: mv remove — dispatched whenever MV is installed to ensure clean state.
+        // If the world was never imported to MV, MV logs a benign "not a MV world" message.
+        if (isMVInstalled()) {
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv remove " + worldName);
-            plugin.getLogger().info("mv remove issued for: " + worldName);
-        } else {
-            plugin.getLogger().info("World not in MV, skipping mv remove: " + worldName);
+            plugin.getLogger().info("[MV] mv remove dispatched for: " + worldName);
         }
 
         // Step 4: backup (optional)
@@ -324,21 +322,11 @@ public class ResetManager {
     }
 
     // -------------------------------------------------------------------------
-    // Multiverse reflection helper
+    // Multiverse helper
     // -------------------------------------------------------------------------
 
-    private boolean isMVWorld(String worldName) {
-        try {
-            org.bukkit.plugin.Plugin mvPlugin =
-                    Bukkit.getPluginManager().getPlugin("Multiverse-Core");
-            if (mvPlugin == null) return false;
-            Method getWorldManager = mvPlugin.getClass().getMethod("getMVWorldManager");
-            Object worldManager = getWorldManager.invoke(mvPlugin);
-            Method isMVWorld = worldManager.getClass().getMethod("isMVWorld", String.class);
-            return (boolean) isMVWorld.invoke(worldManager, worldName);
-        } catch (Exception e) {
-            plugin.getLogger().warning("isMVWorld check failed for '" + worldName + "': " + e.getMessage());
-            return false;
-        }
+    private boolean isMVInstalled() {
+        org.bukkit.plugin.Plugin mvPlugin = Bukkit.getPluginManager().getPlugin("Multiverse-Core");
+        return mvPlugin != null && mvPlugin.isEnabled();
     }
 }
