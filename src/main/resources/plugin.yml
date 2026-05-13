@@ -12,12 +12,12 @@ world-generators:
   CPVPSingleBiome: com.cpvpprac.singlebio.CPVPSingleBiome
 
 commands:
-  cpvp:
+  cpvpsb:
     description: CPVPSingleBiome admin commands
-    usage: /<command> <reset|resetall|status|reload>
-    permission: cpvp.admin
+    usage: /<command> reset <status|reload|now|<world>> | chunky <start <world>|start-all>
+    permission: cpvpsb.admin
 
 permissions:
-  cpvp.admin:
+  cpvpsb.admin:
     description: Admin access to CPVPSingleBiome
     default: op

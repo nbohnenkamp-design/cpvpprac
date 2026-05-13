@@ -206,6 +206,10 @@ public class ResetManager {
     // Chunky
     // -------------------------------------------------------------------------
 
+    public void triggerChunky(String worldName) {
+        startChunky(worldName);
+    }
+
     private void startChunky(String worldName) {
         if (!config.isChunkyEnabled()) return;
         int radius = config.getChunkyRadius();
