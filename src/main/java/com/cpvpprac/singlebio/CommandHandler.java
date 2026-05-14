@@ -3,6 +3,7 @@ package com.cpvpprac.singlebio;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class CommandHandler implements CommandExecutor {
         switch (args[0].toLowerCase()) {
             case "reset" -> handleReset(sender, args);
             case "chunky" -> handleChunky(sender, args);
+            case "gui" -> handleGui(sender);
             default -> sendHelp(sender);
         }
         return true;
@@ -111,6 +113,18 @@ public class CommandHandler implements CommandExecutor {
     }
 
     // -------------------------------------------------------------------------
+    // /cpvpsb gui
+    // -------------------------------------------------------------------------
+
+    private void handleGui(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("§cThis command can only be used by players.");
+            return;
+        }
+        ConfigGui.open(player, plugin);
+    }
+
+    // -------------------------------------------------------------------------
 
     private void sendHelp(CommandSender sender) {
         sender.sendMessage("§6=== CPVPSingleBiome ===");
@@ -120,5 +134,6 @@ public class CommandHandler implements CommandExecutor {
         sender.sendMessage("§e/cpvpsb reset <world> §f- Reset a single world");
         sender.sendMessage("§e/cpvpsb chunky start <world> §f- Start Chunky for one world");
         sender.sendMessage("§e/cpvpsb chunky start-all §f- Start Chunky for all enabled worlds");
+        sender.sendMessage("§e/cpvpsb gui §f- Open the config GUI");
     }
 }

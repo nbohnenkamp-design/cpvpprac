@@ -153,7 +153,33 @@ public class ConfigManager {
                 "§a[CPVPSingleBiome] §fArenas reset complete. Maintenance ended.");
     }
 
+    // --- Config setters (write to memory + disk) ---
+
+    public void setWorldEnabled(String worldKey, boolean enabled) {
+        config.set("worlds." + worldKey + ".enabled", enabled);
+        plugin.saveConfig();
+    }
+
+    public void setResetEnabled(boolean enabled) {
+        config.set("reset.enabled", enabled);
+        plugin.saveConfig();
+    }
+
+    public void setChunkyEnabled(boolean enabled) {
+        config.set("chunky.enabled", enabled);
+        plugin.saveConfig();
+    }
+
+    public void setMaintenanceEnabled(boolean enabled) {
+        config.set("maintenance.enabled", enabled);
+        plugin.saveConfig();
+    }
+
     // --- Worlds list ---
+
+    public boolean isWorldEnabled(String worldKey) {
+        return config.getBoolean("worlds." + worldKey + ".enabled", false);
+    }
 
     public List<String> getEnabledWorlds() {
         List<String> worlds = new ArrayList<>();

@@ -31,6 +31,7 @@ public class CPVPSingleBiome extends JavaPlugin implements Listener {
         resetManager.startScheduler();
 
         getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(new ConfigGuiListener(this), this);
         getCommand("cpvpsb").setExecutor(new CommandHandler(this, configManager, resetManager));
 
         // Set autoload:false for all configured arena worlds via the MV API.
