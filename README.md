@@ -21,7 +21,7 @@ Crystal PvP focused single-biome terrain generator for Paper 1.21.11.
 ### Required
 - Paper 1.21.11
 
-### Optional
+### Recommended Plugins for Full Functionality
 - Multiverse-Core
 - Chunky
 
