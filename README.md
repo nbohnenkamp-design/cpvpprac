@@ -1,4 +1,4 @@
-# CPVPSingleBiome v1.1.0 Stable
+# CPVPSingleBiome v1.2.0 Stable
 
 Crystal PvP focused single-biome terrain generator for Paper 1.21.11.
 
@@ -13,26 +13,71 @@ Crystal PvP focused single-biome terrain generator for Paper 1.21.11.
 - Multiverse-Core support
 - Sparse cinematic decoration system
 - Configurable terrain height, flatness and decoration density
+- Biome-specific decoration configuration
+- Large mushroom structures
+- Snow spruce generation
+- PvP-focused open terrain readability
 
 ---
 
 ## Requirements
 
 ### Required
+
 - Paper 1.21.11
 
 ### Recommended Plugins for Full Functionality
+
 - Multiverse-Core
 - Chunky
 
 ---
 
-## World Creation
+## Commands
 
-Example:
+### General
+
+```bash
+/cpvpsb help
+/cpvpsb reload
+/cpvpsb biomes
+/cpvpsb info
+```
+
+### World Management
+
+```bash
+/cpvpsb create <world> [biome]
+/cpvpsb tp <world>
+```
+
+### Reset System
+
+```bash
+/cpvpsb reset now
+/cpvpsb reset <world>
+/cpvpsb reset status
+/cpvpsb reset reload
+```
+
+### Chunky Integration
+
+```bash
+/cpvpsb chunky start <world>
+/cpvpsb chunky start-all
+```
+
+---
+
+## Multiverse Usage
 
 ```bash
 /mv create plains normal -g CPVPSingleBiome:plains
+/mv create desert normal -g CPVPSingleBiome:desert
+/mv create badlands normal -g CPVPSingleBiome:badlands
+/mv create snow normal -g CPVPSingleBiome:snow
+/mv create mushroom normal -g CPVPSingleBiome:mushroom
+/mv create end normal -g CPVPSingleBiome:end
 ```
 
 ### Available biome generators
@@ -43,18 +88,6 @@ Example:
 - snow
 - mushroom
 - end
-
----
-
-## Commands
-
-```bash
-/cpvpsb reset now
-/cpvpsb reset <world>
-/cpvpsb reset reload
-/cpvpsb chunky start <world>
-/cpvpsb chunky start-all
-```
 
 ---
 

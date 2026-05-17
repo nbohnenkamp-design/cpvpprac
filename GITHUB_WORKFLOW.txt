@@ -1,0 +1,90 @@
+CPVPSingleBiome – GitHub Workflow
+
+# -----------------------------------------------------------------------------
+# Build prüfen
+# -----------------------------------------------------------------------------
+
+cd ~/IdeaProjects/cpvpprac-stable-work
+
+mvn clean package
+
+# -----------------------------------------------------------------------------
+# Git Status prüfen
+# -----------------------------------------------------------------------------
+
+git status
+
+# -----------------------------------------------------------------------------
+# Änderungen übernehmen
+# -----------------------------------------------------------------------------
+
+git add .
+
+# -----------------------------------------------------------------------------
+# Commit erstellen
+# -----------------------------------------------------------------------------
+
+git commit -m "Kurze Beschreibung der Änderung"
+
+# Beispiele:
+# "Improve snow spruce generation"
+# "Add biome specific decoration config"
+# "Fix mushroom structures"
+
+# -----------------------------------------------------------------------------
+# Nach GitHub hochladen
+# -----------------------------------------------------------------------------
+
+git push origin main
+
+# =============================================================================
+# STABILE RELEASES
+# =============================================================================
+# Nur verwenden wenn wirklich stabile Version veröffentlicht werden soll.
+# Niemals denselben Tag erneut verwenden.
+# =============================================================================
+
+# Beispiel neue stabile Version:
+
+git tag stable-cpvpsinglebiome-v1.2.0
+
+git push origin stable-cpvpsinglebiome-v1.2.0
+
+# Danach:
+# GitHub -> Releases -> neuen Release erstellen
+# JAR aus target/ hochladen
+
+# -----------------------------------------------------------------------------
+# WICHTIG
+# -----------------------------------------------------------------------------
+
+# target/ niemals committen
+# .gitignore schützt davor
+
+# Alte stabile Tags NICHT wiederverwenden
+# Immer neue Versionsnummern nutzen
+
+# Empfohlenes Versionsschema:
+# 1.1.0
+# 1.1.1
+# 1.2.0
+# 2.0.0
+
+GitHub neue stable setzen:
+xed ~/IdeaProjects/cpvpprac-stable-work/pom.xml
+xed ~/IdeaProjects/cpvpprac-stable-work/README.md
+
+#bauen
+cd ~/IdeaProjects/cpvpprac-stable-work
+mvn clean package
+
+#GitHub
+git add .
+git commit -m "Release stable CPVPSingleBiome v1.2.0"
+
+git tag stable-cpvpsinglebiome-v1.2.0
+
+git push origin main
+git push origin stable-cpvpsinglebiome-v1.2.0
+
+
