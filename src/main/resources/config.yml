@@ -1,114 +1,142 @@
 # CPVPSingleBiome Configuration
+# Supported biomes:
+# desert, plains, badlands, snow, mushroom, end
 
-worlds:
-  plains:
-    enabled: true
-    biome: PLAINS
-    terrain:
-      base-height: 64
-      flatness: 0.6
-      height-variation: 14
-      noise-scale: 0.004
-      noise-octaves: 6
-    decorations:
-      enabled: true
-      grass-density: 0.35
-      flower-density: 0.08
-      tree-density: 0.03
+default-biome: desert                    # used if no biome is specified
 
-  desert:
-    enabled: true
-    biome: DESERT
-    terrain:
-      base-height: 64
-      flatness: 0.55
-      height-variation: 12
-      noise-scale: 0.004
-      noise-octaves: 6
-    decorations:
-      enabled: true
-      cactus-density: 0.015
-      dead-bush-density: 0.04
+# -----------------------------------------------------------------------------
+# Terrain generation
+# -----------------------------------------------------------------------------
+
+base-height: 70                          # average terrain height
+
+height-variation: 10                     # 0 = flat | 10 = recommended | 16 = strong hills
+
+noise-scale: 80.0                        # 40 = bumpy | 80 = smooth | 160 = huge swells
+
+flatness: 0.35                           # 0.0 = full hills | 0.35 = recommended | 1.0 = flat
+
+# -----------------------------------------------------------------------------
+# Decorations
+# -----------------------------------------------------------------------------
+# Sparse cinematic decoration designed for Crystal PvP readability.
+
+decoration:
+
+  enabled: true                          # master switch
+
+  density: 0.15                          # 0.10 sparse | 0.15 recommended | 0.30 busy
+
+  tree-density: 0.4                      # 0.0 none | 0.4 PvP style | 1.0 dense
+
+  small-trees: true                      # PLAINS bushes / SNOW spruce trees
+
+  flowers: true                          # PLAINS grass + flowers
+
+  rocks: true                            # DESERT rocks / BADLANDS formations / END bumps
+
+  dead-bushes: true                      # DESERT + BADLANDS
+
+  cactus: true                           # DESERT cactus generation
+
+  mushrooms: true                        # MUSHROOM small + large mushrooms
+
+  # ---------------------------------------------------------------------------
+  # Biome-specific overrides
+  # ---------------------------------------------------------------------------
+
+  biomes:
+
+    plains:
+      density: 0.12                      # very clean PvP terrain
+      tree-density: 0.20
+
+    desert:
+      density: 0.08                      # mostly open
       tree-density: 0.0
 
-  badlands:
-    enabled: true
-    biome: BADLANDS
-    terrain:
-      base-height: 66
-      flatness: 0.45
-      height-variation: 18
-      noise-scale: 0.005
-      noise-octaves: 6
-    decorations:
-      enabled: true
-      dead-bush-density: 0.02
+    badlands:
+      density: 0.18                      # more dramatic formations
       tree-density: 0.0
 
-  snow:
-    enabled: true
-    biome: SNOWY_PLAINS
-    terrain:
-      base-height: 64
-      flatness: 0.65
-      height-variation: 10
-      noise-scale: 0.004
-      noise-octaves: 6
-    decorations:
-      enabled: false
-      tree-density: 0.01
+    snow:
+      density: 0.14                      # open snowy biome
+      tree-density: 0.35
 
-  mushroom:
-    enabled: true
-    biome: MUSHROOM_FIELDS
-    terrain:
-      base-height: 64
-      flatness: 0.7
-      height-variation: 8
-      noise-scale: 0.004
-      noise-octaves: 6
-    decorations:
-      enabled: true
-      mushroom-density: 0.04
+    mushroom:
+      density: 0.28                      # mystical / atmospheric
       tree-density: 0.0
 
-  end:
-    enabled: true
-    biome: THE_END
-    terrain:
-      base-height: 60
-      flatness: 0.5
-      height-variation: 12
-      noise-scale: 0.005
-      noise-octaves: 6
-    decorations:
-      enabled: false
+    end:
+      density: 0.04                      # almost empty
       tree-density: 0.0
+
+# -----------------------------------------------------------------------------
+# World settings
+# -----------------------------------------------------------------------------
+
+world-border-size: 0                     # 0 = disabled
+
+# -----------------------------------------------------------------------------
+# Automatic world reset
+# -----------------------------------------------------------------------------
+# Only listed worlds are touched.
 
 reset:
-  enabled: true
-  time: "04:00"
-  fallback-world: "world"
-  delay-between-worlds-seconds: 5
-  backup:
-    enabled: false
-    directory: "world-backups"
-  warnings:
-    - minutes: 10
-      message: "§e[CPVPSingleBiome] §fArena reset in §e10 minutes§f!"
-    - minutes: 5
-      message: "§6[CPVPSingleBiome] §fArena reset in §65 minutes§f!"
-    - minutes: 1
-      message: "§c[CPVPSingleBiome] §fArena reset in §c1 minute§f!"
+
+  enabled: false                         # automatic scheduler
+
+  time: "05:00"                          # HH:mm format
+
+  timezone: ""                           # empty = server timezone
+
+  interval-days: 7                       # 1 daily | 7 weekly
+
+  fallback-world: "world"                # players are teleported here before reset
+
+  skip-if-any-player-online: false       # postpone if anyone is online
+
+  warning-enabled: true                  # broadcast warnings
+
+  warning-minutes: [10, 5, 1]            # countdown warnings
+
+  backup-old-worlds: true                # rename old world folder
+
+  delete-old-worlds-after-success: false # remove backup after successful reset
+
+  maintenance-during-reset: false        # run maintenance commands during reset
+
+  maintenance-command-on: "main on"      # console command before reset
+
+  maintenance-command-off: "main off"    # console command after reset
+
+  worlds:
+    - { world: "plains",   biome: "plains" }
+    - { world: "desert",   biome: "desert" }
+    - { world: "badlands", biome: "badlands" }
+    - { world: "snow",     biome: "snow" }
+    - { world: "mushroom", biome: "mushroom" }
+
+# -----------------------------------------------------------------------------
+# Chunky integration
+# -----------------------------------------------------------------------------
 
 chunky:
-  enabled: true
-  radius: 500
-  shape: "circle"
-  timeout-minutes: 30
 
-maintenance:
-  enabled: true
-  kick-message: "§c[CPVPSingleBiome] §fServer is resetting arenas. Please reconnect shortly."
-  broadcast-on: "§c[CPVPSingleBiome] §fMaintenance started — arenas are resetting."
-  broadcast-off: "§a[CPVPSingleBiome] §fArenas reset complete. Maintenance ended."
+  enabled: false                         # automatically run after reset
+
+  radius: 600                            # pregeneration radius
+
+  shape: "circle"                        # circle / square
+
+  center-spawn: true                     # true = world spawn | false = 0/0
+
+  silent: false                          # suppress Chunky progress chat
+
+  delay-after-world-create-seconds: 10   # wait after world creation
+
+# -----------------------------------------------------------------------------
+# Messages
+# -----------------------------------------------------------------------------
+
+messages-prefix: '§5[§dCPVPSB§5] §d'

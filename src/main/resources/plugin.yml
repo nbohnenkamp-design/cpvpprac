@@ -1,24 +1,58 @@
 name: CPVPSingleBiome
-version: '${project.version}'
-main: com.cpvpprac.singlebio.CPVPSingleBiome
+version: '1.1.0'
+main: me.liass.cpvpsinglebiome.CPVPSingleBiomePlugin
 api-version: '1.21'
-load: STARTUP
-author: Norbert Bohnenkamp
-website: https://cpvpprac.eu
-description: Crystal-PvP focused single-biome terrain generator with reset and Chunky integration.
-softdepend: [Chunky]
-loadbefore: [Multiverse-Core]
 
-world-generators:
-  CPVPSingleBiome: com.cpvpprac.singlebio.CPVPSingleBiome
+load: STARTUP
+
+description: A Single-Biome World Generator Plugin for Crystal PvP servers
+authors: [ liass ]
+
+softdepend: [ Multiverse-Core, Chunky ]
 
 commands:
   cpvpsb:
-    description: CPVPSingleBiome admin commands
-    usage: /<command> reset <status|reload|now|<world>> | chunky <start <world>|start-all>
-    permission: cpvpsb.admin
+    description: Main command for CPVPSingleBiome
+    usage: /<command> <help|reload|biomes|info|create|tp|reset|chunky>
+    aliases: [ singlebiome, cpvpsinglebiome ]
 
 permissions:
-  cpvpsb.admin:
-    description: Admin access to CPVPSingleBiome
+  cpvpsinglebiome.admin:
+    description: Access to all CPVPSingleBiome admin commands
+    default: op
+    children:
+      cpvpsinglebiome.reload: true
+      cpvpsinglebiome.create: true
+      cpvpsinglebiome.tp: true
+      cpvpsinglebiome.info: true
+      cpvpsinglebiome.reset: true
+      cpvpsinglebiome.reset.now: true
+      cpvpsinglebiome.chunky: true
+
+  cpvpsinglebiome.reload:
+    description: Allows use of /cpvpsb reload
+    default: op
+
+  cpvpsinglebiome.create:
+    description: Allows use of /cpvpsb create
+    default: op
+
+  cpvpsinglebiome.tp:
+    description: Allows use of /cpvpsb tp
+    default: op
+
+  cpvpsinglebiome.info:
+    description: Allows use of /cpvpsb info and /cpvpsb biomes
+    default: true
+
+  cpvpsinglebiome.reset:
+    description: View reset status and reload reset configuration
+    default: op
+
+  cpvpsinglebiome.reset.now:
+    description: Trigger a reset of one or all configured arenas
+    default: op
+
+  cpvpsinglebiome.chunky:
+    description: Manually start Chunky pre-generation via /cpvpsb chunky
     default: op

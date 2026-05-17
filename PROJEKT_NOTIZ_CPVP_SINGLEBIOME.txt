@@ -1,0 +1,110 @@
+CPVPSingleBiome – Projektstand
+
+Projekt:
+Minecraft Paper Plugin CPVPSingleBiome für cpvpprac.eu / Crystal-PvP-Practice.
+
+Ziel:
+Eigene Single-Biome-Welten für PvP:
+plains, desert, badlands, snow, mushroom, end.
+Offen, spielbar, keine überfüllten Vanilla-Welten, aber trotzdem atmosphärisch.
+
+Aktueller Arbeitsordner:
+~/IdeaProjects/cpvpprac-stable-work
+
+Altes/ursprüngliches Projekt:
+~/IdeaProjects/cpvpprac
+
+Wichtige Dateien:
+pom.xml
+src/main/resources/plugin.yml
+src/main/resources/config.yml
+src/main/java/me/liass/cpvpsinglebiome/CPVPSingleBiomePlugin.java
+src/main/java/me/liass/cpvpsinglebiome/config/ConfigManager.java
+src/main/java/me/liass/cpvpsinglebiome/generator/BiomeType.java
+src/main/java/me/liass/cpvpsinglebiome/generator/SingleBiomeChunkGenerator.java
+src/main/java/me/liass/cpvpsinglebiome/generator/SimpleNoise.java
+src/main/java/me/liass/cpvpsinglebiome/generator/SingleBiomeProvider.java
+src/main/java/me/liass/cpvpsinglebiome/populator/CPVPSBBlockPopulator.java
+src/main/java/me/liass/cpvpsinglebiome/reset/ResetManager.java
+src/main/java/me/liass/cpvpsinglebiome/chunky/ChunkyIntegration.java
+
+Build:
+cd ~/IdeaProjects/cpvpprac-stable-work
+mvn clean package
+
+JAR:
+target/CPVPSingleBiome-1.1.0.jar
+
+Server-Test:
+Plugin-JAR nach plugins/ hochladen.
+Server stoppen.
+Optional löschen:
+plugins/.paper-remapped
+Server starten.
+
+Multiverse-Welten:
+mv create plains normal -g CPVPSingleBiome:plains
+mv create desert normal -g CPVPSingleBiome:desert
+mv create badlands normal -g CPVPSingleBiome:badlands
+mv create snow normal -g CPVPSingleBiome:snow
+mv create mushroom normal -g CPVPSingleBiome:mushroom
+mv create end normal -g CPVPSingleBiome:end
+
+Wichtiger Verlauf:
+Das alte stabile JAR war nicht der com.cpvpprac.singlebio-Code, sondern ein altes me.liass.cpvpsinglebiome-Plugin.
+Die stabile JAR wurde dekompiliert und daraus wurde cpvpprac-stable-work aufgebaut.
+Mehrere dekompilierte Dateien waren kaputt und wurden repariert:
+BiomeType.java
+ResetWorldSpec.java
+ResetManager.java
+ChunkyIntegration.java
+CPVPSBBlockPopulator.java
+
+Aktueller Stand:
+Alle sechs Biome erzeugen stabile Grundlagen.
+Snow funktioniert gut mit seltenen größeren verschneiten Fichten.
+Schwebende Eisblöcke, blaue Blöcke und schwebende Baumreste wurden entfernt.
+Mushroom hat kleine und große rote/braune Pilze.
+Plains hat Gras/Blumen und kleine Büsche.
+Desert hat tote Büsche, Kakteen und kleine Sandsteinfelsen.
+Badlands hat tote Büsche und Terracotta-Formationen.
+End bleibt weitgehend leer mit kleinen Endstone-Bumps.
+
+Config:
+src/main/resources/config.yml wurde erweitert.
+Es gibt jetzt globale Decoration-Werte und biome-spezifische Werte:
+
+decoration.density
+decoration.tree-density
+decoration.biomes.<biome>.density
+decoration.biomes.<biome>.tree-density
+
+Wichtig:
+ConfigManager liest die biome-spezifischen Werte.
+CPVPSBBlockPopulator nutzt diese Werte.
+
+Empfohlener Stil:
+Crystal-PvP braucht offene, lesbare Flächen.
+Nicht zu viel Deko.
+Mushroom darf dichter sein.
+Snow eher offen.
+Plains clean.
+Badlands markant.
+Desert eher leer.
+End minimal.
+
+Reset:
+ResetManager wurde neu aufgebaut.
+Reset sollte erst auf Testserver getestet werden.
+reset.enabled bleibt zunächst false.
+Manuelle Reset-Befehle erst mit Testwelten prüfen.
+
+Chunky:
+ChunkyIntegration wurde repariert.
+chunky.enabled bleibt zunächst false, bis Reset sicher getestet ist.
+
+GitHub-Ziel:
+Alten chaotischen Code durch aktuellen Stand aus cpvpprac-stable-work ersetzen.
+Version 1.1.0 als stabil markieren.
+Release-JAR aus target hochladen.
+Tag z. B. stable-cpvpsinglebiome-v1.1.0 setzen.
