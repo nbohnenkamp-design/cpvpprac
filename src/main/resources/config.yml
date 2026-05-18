@@ -92,7 +92,7 @@ reset:
 
   interval-days: 7                       # 1 daily | 7 weekly
 
-  fallback-world: "newspaw               # players are teleported here before reset
+  fallback-world: "newspawn"             # players are teleported here before reset
 
   skip-if-any-player-online: false       # postpone if anyone is online
 
