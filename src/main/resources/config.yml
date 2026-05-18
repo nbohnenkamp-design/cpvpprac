@@ -64,7 +64,7 @@ decoration:
       tree-density: 0.35
 
     mushroom:
-      density: 0.28                      # mystical / atmospheric
+      density: 0.22                      # mystical / atmospheric
       tree-density: 0.0
 
     end:
@@ -92,7 +92,7 @@ reset:
 
   interval-days: 7                       # 1 daily | 7 weekly
 
-  fallback-world: "world"                # players are teleported here before reset
+  fallback-world: "newspaw               # players are teleported here before reset
 
   skip-if-any-player-online: false       # postpone if anyone is online
 
@@ -100,9 +100,9 @@ reset:
 
   warning-minutes: [10, 5, 1]            # countdown warnings
 
-  backup-old-worlds: true                # rename old world folder
+  backup-old-worlds: false               # rename old world folder
 
-  delete-old-worlds-after-success: false # remove backup after successful reset
+  delete-old-worlds-after-success: true  # remove backup after successful reset
 
   maintenance-during-reset: false        # run maintenance commands during reset
 
@@ -123,7 +123,7 @@ reset:
 
 chunky:
 
-  enabled: false                         # automatically run after reset
+  enabled: true                          # automatically run after reset
 
   radius: 600                            # pregeneration radius
 
