@@ -9,7 +9,6 @@ import java.util.Map;
 import me.liass.cpvpsinglebiome.CPVPSingleBiomePlugin;
 import me.liass.cpvpsinglebiome.reset.ResetWorldSpec;
 
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class ConfigManager {
@@ -28,27 +27,43 @@ public class ConfigManager {
     }
 
     public String getDefaultBiome() {
-        return this.config.getString("default-biome", "desert");
+        return this.config.getString(
+                "default-biome",
+                "desert"
+        );
     }
 
     public int getBaseHeight() {
         if (!this.config.contains("base-height")
                 && this.config.contains("terrain-height")) {
-            return this.config.getInt("terrain-height", 70);
+            return this.config.getInt(
+                    "terrain-height",
+                    70
+            );
         }
 
-        return this.config.getInt("base-height", 70);
+        return this.config.getInt(
+                "base-height",
+                70
+        );
     }
 
     public double getHeightVariation() {
         return Math.max(
                 0.0D,
-                this.config.getDouble("height-variation", 10.0D)
+                this.config.getDouble(
+                        "height-variation",
+                        10.0D
+                )
         );
     }
 
     public double getNoiseScale() {
-        double v = this.config.getDouble("noise-scale", 80.0D);
+        double v =
+                this.config.getDouble(
+                        "noise-scale",
+                        80.0D
+                );
 
         return (v <= 0.0D)
                 ? 80.0D
@@ -56,7 +71,11 @@ public class ConfigManager {
     }
 
     public double getFlatness() {
-        double v = this.config.getDouble("flatness", 0.35D);
+        double v =
+                this.config.getDouble(
+                        "flatness",
+                        0.35D
+                );
 
         if (v < 0.0D) {
             return 0.0D;
@@ -70,7 +89,10 @@ public class ConfigManager {
     }
 
     public double getWorldBorderSize() {
-        return this.config.getDouble("world-border-size", 0.0D);
+        return this.config.getDouble(
+                "world-border-size",
+                0.0D
+        );
     }
 
     public String getPrefix() {
@@ -97,7 +119,6 @@ public class ConfigManager {
     }
 
     public double getBiomeDecorationDensity(String biome) {
-
         String path =
                 "decoration.biomes."
                         + biome.toLowerCase()
@@ -122,7 +143,6 @@ public class ConfigManager {
     }
 
     public double getBiomeTreeDensity(String biome) {
-
         String path =
                 "decoration.biomes."
                         + biome.toLowerCase()
@@ -145,7 +165,6 @@ public class ConfigManager {
     }
 
     private double clampDensity(double v) {
-
         if (v < 0.0D) {
             return 0.0D;
         }
@@ -158,7 +177,6 @@ public class ConfigManager {
     }
 
     private double clampTreeDensity(double v) {
-
         if (v < 0.0D) {
             return 0.0D;
         }
@@ -178,11 +196,11 @@ public class ConfigManager {
     }
 
     public LocalTime getResetTime() {
-
-        String raw = this.config.getString(
-                "reset.time",
-                "05:00"
-        );
+        String raw =
+                this.config.getString(
+                        "reset.time",
+                        "05:00"
+                );
 
         try {
             return LocalTime.parse(raw);
@@ -193,11 +211,11 @@ public class ConfigManager {
     }
 
     public ZoneId getResetZone() {
-
-        String raw = this.config.getString(
-                "reset.timezone",
-                ""
-        );
+        String raw =
+                this.config.getString(
+                        "reset.timezone",
+                        ""
+                );
 
         if (raw == null || raw.isEmpty()) {
             return ZoneId.systemDefault();
@@ -225,6 +243,47 @@ public class ConfigManager {
         );
     }
 
+    public int getRetryAfterMinutes() {
+        int v =
+                this.config.getInt(
+                        "reset.retry-after-minutes",
+                        10
+                );
+
+        return Math.max(1, v);
+    }
+
+    public boolean isBlockJoinsDuringReset() {
+        return this.config.getBoolean(
+                "reset.block-joins-during-reset",
+                true
+        );
+    }
+
+    public int getJoinBlockExtraMinutesAfterReset() {
+        int v =
+                this.config.getInt(
+                        "reset.join-block-extra-minutes-after-reset",
+                        90
+                );
+
+        return Math.max(0, v);
+    }
+
+    public String getMaintenanceBypassPermission() {
+        return this.config.getString(
+                "reset.maintenance-bypass-permission",
+                "cpvpsinglebiome.maintenance.bypass"
+        );
+    }
+
+    public String getMaintenanceKickMessage() {
+        return this.config.getString(
+                "reset.maintenance-kick-message",
+                "§c[CPVPSingleBiome] §fArenas are resetting. Please reconnect shortly."
+        );
+    }
+
     public boolean isWarningEnabled() {
         return this.config.getBoolean(
                 "reset.warning-enabled",
@@ -233,7 +292,6 @@ public class ConfigManager {
     }
 
     public List<Integer> getWarningMinutes() {
-
         List<Integer> raw =
                 this.config.getIntegerList(
                         "reset.warning-minutes"
@@ -282,25 +340,25 @@ public class ConfigManager {
     }
 
     public int getResetIntervalDays() {
-
-        int v = this.config.getInt(
-                "reset.interval-days",
-                1
-        );
+        int v =
+                this.config.getInt(
+                        "reset.interval-days",
+                        1
+                );
 
         return Math.max(1, v);
     }
 
     public List<ResetWorldSpec> getResetWorlds() {
-
         List<ResetWorldSpec> out =
                 new ArrayList<>();
 
         List<Map<?, ?>> raw =
-                this.config.getMapList("reset.worlds");
+                this.config.getMapList(
+                        "reset.worlds"
+                );
 
         for (Map<?, ?> entry : raw) {
-
             Object w = entry.get("world");
 
             if (w == null) {
@@ -333,11 +391,11 @@ public class ConfigManager {
     }
 
     public int getChunkyRadius() {
-
-        int v = this.config.getInt(
-                "chunky.radius",
-                1000
-        );
+        int v =
+                this.config.getInt(
+                        "chunky.radius",
+                        1000
+                );
 
         return Math.max(0, v);
     }
@@ -364,11 +422,11 @@ public class ConfigManager {
     }
 
     public int getChunkyDelaySeconds() {
-
-        int v = this.config.getInt(
-                "chunky.delay-after-world-create-seconds",
-                10
-        );
+        int v =
+                this.config.getInt(
+                        "chunky.delay-after-world-create-seconds",
+                        10
+                );
 
         return Math.max(0, v);
     }

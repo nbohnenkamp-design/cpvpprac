@@ -33,7 +33,7 @@ decoration:
 
   flowers: true                          # PLAINS grass + flowers
 
-  rocks: true                            # DESERT rocks / BADLANDS formations / END bumps
+  rocks: true                           # DESERT rocks / BADLANDS formations / END bumps
 
   dead-bushes: true                      # DESERT + BADLANDS
 
@@ -75,7 +75,7 @@ decoration:
 # World settings
 # -----------------------------------------------------------------------------
 
-world-border-size: 0                     # 0 = disabled
+world-border-size: 1200                  # 0 = disabled
 
 # -----------------------------------------------------------------------------
 # Automatic world reset
@@ -88,13 +88,23 @@ reset:
 
   time: "05:00"                          # HH:mm format
 
-  timezone: ""                           # empty = server timezone
+  timezone: "Europe/Berlin"              # Germany, includes summer/winter time
 
   interval-days: 7                       # 1 daily | 7 weekly
 
   fallback-world: "newspawn"             # players are teleported here before reset
 
-  skip-if-any-player-online: false       # postpone if anyone is online
+  skip-if-any-player-online: true        # postpone if normal players are online
+
+  retry-after-minutes: 10                # check again after this many minutes
+
+  block-joins-during-reset: true         # block normal players during reset/chunky phase
+
+  join-block-extra-minutes-after-reset: 90 # keep join block after reset so Chunky can finish
+
+  maintenance-bypass-permission: "cpvpsinglebiome.maintenance.bypass"
+
+  maintenance-kick-message: "§c[CPVPSingleBiome] §fArenas are resetting. Please reconnect shortly."
 
   warning-enabled: true                  # broadcast warnings
 
