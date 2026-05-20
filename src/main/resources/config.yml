@@ -33,7 +33,7 @@ decoration:
 
   flowers: true                          # PLAINS grass + flowers
 
-  rocks: true                           # DESERT rocks / BADLANDS formations / END bumps
+  rocks: true                            # DESERT rocks / BADLANDS formations / END bumps
 
   dead-bushes: true                      # DESERT + BADLANDS
 
@@ -84,7 +84,7 @@ world-border-size: 1200                  # 0 = disabled
 
 reset:
 
-  enabled: false                         # automatic scheduler
+  enabled: true                          # true = automatic scheduler active
 
   time: "05:00"                          # HH:mm format
 
@@ -98,9 +98,7 @@ reset:
 
   retry-after-minutes: 10                # check again after this many minutes
 
-  block-joins-during-reset: true         # block normal players during reset/chunky phase
-
-  join-block-extra-minutes-after-reset: 90 # keep join block after reset so Chunky can finish
+  block-joins-during-reset: true         # block normal players during reset and Chunky
 
   maintenance-bypass-permission: "cpvpsinglebiome.maintenance.bypass"
 
@@ -108,13 +106,13 @@ reset:
 
   warning-enabled: true                  # broadcast warnings
 
-  warning-minutes: [10, 5, 1]            # countdown warnings
+  warning-minutes: [10, 5, 1]            # countdown warnings before reset
 
-  backup-old-worlds: false               # rename old world folder
+  backup-old-worlds: false               # false = delete old world folders directly
 
-  delete-old-worlds-after-success: true  # remove backup after successful reset
+  delete-old-worlds-after-success: true  # only relevant if backup-old-worlds is true
 
-  maintenance-during-reset: false        # run maintenance commands during reset
+  maintenance-during-reset: false        # run external maintenance commands during reset
 
   maintenance-command-on: "main on"      # console command before reset
 

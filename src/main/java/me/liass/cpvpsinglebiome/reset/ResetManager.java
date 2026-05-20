@@ -1,6 +1,7 @@
 package me.liass.cpvpsinglebiome.reset;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -11,8 +12,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.function.Consumer;
 
 import me.liass.cpvpsinglebiome.CPVPSingleBiomePlugin;
+import me.liass.cpvpsinglebiome.chunky.ChunkyIntegration;
 import me.liass.cpvpsinglebiome.config.ConfigManager;
 
 import org.bukkit.Bukkit;
@@ -26,15 +29,20 @@ public class ResetManager {
     private final ConfigManager config;
 
     private boolean resetInProgress = false;
+    private boolean waitingForChunky = false;
 
     private int schedulerTaskId = -1;
+    private int chunkyWatchdogTaskId = -1;
 
     private LocalDate lastAutoResetDate = null;
     private LocalDateTime nextResetAt = null;
 
-    private LocalDateTime joinBlockUntil = null;
-
     private final Set<Integer> sentWarnings = new HashSet<>();
+
+    private final Set<String> pendingChunkyWorlds = new HashSet<>();
+    private final Set<String> startedChunkyWorlds = new HashSet<>();
+
+    private boolean chunkyCompletionHookRegistered = false;
 
     public ResetManager(
             CPVPSingleBiomePlugin plugin,
@@ -55,6 +63,8 @@ public class ResetManager {
             );
             return;
         }
+
+        registerChunkyCompletionHook();
 
         calculateNextReset();
 
@@ -80,6 +90,13 @@ public class ResetManager {
             Bukkit.getScheduler().cancelTask(this.schedulerTaskId);
             this.schedulerTaskId = -1;
         }
+
+        stopChunkyWatchdog();
+
+        this.resetInProgress = false;
+        this.waitingForChunky = false;
+        this.pendingChunkyWorlds.clear();
+        this.startedChunkyWorlds.clear();
     }
 
     public void reload() {
@@ -96,20 +113,7 @@ public class ResetManager {
             return false;
         }
 
-        if (this.resetInProgress) {
-            return true;
-        }
-
-        if (this.joinBlockUntil == null) {
-            return false;
-        }
-
-        LocalDateTime now =
-                LocalDateTime.now(
-                        config.getResetZone()
-                );
-
-        return now.isBefore(this.joinBlockUntil);
+        return this.resetInProgress || this.waitingForChunky;
     }
 
     public boolean canBypassMaintenance(Player player) {
@@ -135,7 +139,7 @@ public class ResetManager {
     }
 
     private void tick() {
-        if (this.resetInProgress) {
+        if (this.resetInProgress || this.waitingForChunky) {
             return;
         }
 
@@ -271,7 +275,7 @@ public class ResetManager {
     }
 
     public void resetAll(CommandSender sender) {
-        if (this.resetInProgress) {
+        if (this.resetInProgress || this.waitingForChunky) {
             sender.sendMessage(
                     config.getPrefix()
                             + "Reset already running."
@@ -317,7 +321,7 @@ public class ResetManager {
             int index
     ) {
         if (index >= worlds.size()) {
-            finishMaintenance(sender);
+            onWorldResetPhaseComplete(sender);
             return;
         }
 
@@ -345,7 +349,7 @@ public class ResetManager {
             String worldName,
             CommandSender sender
     ) {
-        if (this.resetInProgress) {
+        if (this.resetInProgress || this.waitingForChunky) {
             sender.sendMessage(
                     config.getPrefix()
                             + "Reset already running."
@@ -363,7 +367,7 @@ public class ResetManager {
                         sender
                 );
 
-                finishMaintenance(sender);
+                onWorldResetPhaseComplete(sender);
                 return;
             }
         }
@@ -379,7 +383,7 @@ public class ResetManager {
             String worldName,
             String biomeName
     ) {
-        if (this.resetInProgress) {
+        if (this.resetInProgress || this.waitingForChunky) {
             plugin.getLogger().warning(
                     "Reset already running."
             );
@@ -394,14 +398,19 @@ public class ResetManager {
                 Bukkit.getConsoleSender()
         );
 
-        finishMaintenance(
+        onWorldResetPhaseComplete(
                 Bukkit.getConsoleSender()
         );
     }
 
     private void beginMaintenance() {
         this.resetInProgress = true;
-        this.joinBlockUntil = null;
+        this.waitingForChunky = false;
+
+        this.pendingChunkyWorlds.clear();
+        this.startedChunkyWorlds.clear();
+
+        stopChunkyWatchdog();
 
         if (config.isBlockJoinsDuringReset()) {
             plugin.getLogger().info(
@@ -410,7 +419,47 @@ public class ResetManager {
         }
     }
 
+    private void onWorldResetPhaseComplete(CommandSender sender) {
+        this.resetInProgress = false;
+
+        if (config.isChunkyEnabled()
+                && !this.pendingChunkyWorlds.isEmpty()) {
+            this.waitingForChunky = true;
+
+            sender.sendMessage(
+                    config.getPrefix()
+                            + "World reset complete. Waiting for Chunky to finish..."
+            );
+
+            plugin.getLogger().info(
+                    "Arena reset world phase complete. Waiting for Chunky worlds: "
+                            + String.join(", ", this.pendingChunkyWorlds)
+            );
+
+            registerChunkyCompletionHook();
+            startChunkyWatchdog();
+
+            return;
+        }
+
+        finishMaintenance(sender);
+    }
+
     private void finishMaintenance(CommandSender sender) {
+        if (!this.resetInProgress
+                && !this.waitingForChunky
+                && this.pendingChunkyWorlds.isEmpty()) {
+            return;
+        }
+
+        this.resetInProgress = false;
+        this.waitingForChunky = false;
+
+        this.pendingChunkyWorlds.clear();
+        this.startedChunkyWorlds.clear();
+
+        stopChunkyWatchdog();
+
         if (config.isMaintenanceDuringReset()) {
             Bukkit.dispatchCommand(
                     Bukkit.getConsoleSender(),
@@ -418,57 +467,14 @@ public class ResetManager {
             );
         }
 
-        int extraMinutes =
-                config.getJoinBlockExtraMinutesAfterReset();
-
-        if (config.isBlockJoinsDuringReset()
-                && extraMinutes > 0) {
-            this.joinBlockUntil =
-                    LocalDateTime.now(
-                            config.getResetZone()
-                    ).plusMinutes(extraMinutes);
-
-            plugin.getLogger().info(
-                    "Arena reset finished. Join guard remains active for "
-                            + extraMinutes
-                            + " minute(s), so Chunky can finish without players joining."
-            );
-
-            Bukkit.getScheduler().runTaskLater(
-                    plugin,
-                    this::clearExpiredJoinBlock,
-                    20L * 60L * extraMinutes
-            );
-
-        } else {
-            this.joinBlockUntil = null;
-        }
-
-        this.resetInProgress = false;
+        plugin.getLogger().info(
+                "Arena reset and Chunky pre-generation complete. Join guard disabled."
+        );
 
         sender.sendMessage(
                 config.getPrefix()
                         + "Arena reset complete."
         );
-    }
-
-    private void clearExpiredJoinBlock() {
-        if (this.joinBlockUntil == null) {
-            return;
-        }
-
-        LocalDateTime now =
-                LocalDateTime.now(
-                        config.getResetZone()
-                );
-
-        if (!now.isBefore(this.joinBlockUntil)) {
-            this.joinBlockUntil = null;
-
-            plugin.getLogger().info(
-                    "Join guard disabled. Normal players may join again."
-            );
-        }
     }
 
     private void resetWorldInternal(
@@ -572,23 +578,279 @@ public class ResetManager {
         );
 
         if (config.isChunkyEnabled()) {
+            String key =
+                    normalizeWorldName(worldName);
+
+            this.pendingChunkyWorlds.add(key);
+
             Bukkit.getScheduler().runTaskLater(
                     plugin,
-                    () -> {
-                        World newWorld =
-                                Bukkit.getWorld(worldName);
-
-                        if (newWorld != null) {
-                            me.liass.cpvpsinglebiome.chunky.ChunkyIntegration.start(
-                                    plugin,
-                                    newWorld,
-                                    config
-                            );
-                        }
-                    },
+                    () -> startChunkyForWorld(worldName),
                     20L * config.getChunkyDelaySeconds()
             );
         }
+    }
+
+    private void startChunkyForWorld(String worldName) {
+        String key =
+                normalizeWorldName(worldName);
+
+        World newWorld =
+                Bukkit.getWorld(worldName);
+
+        if (newWorld == null) {
+            plugin.getLogger().warning(
+                    "Chunky start skipped: world is not loaded: "
+                            + worldName
+            );
+
+            markChunkyWorldComplete(worldName);
+            return;
+        }
+
+        this.startedChunkyWorlds.add(key);
+
+        boolean ok =
+                ChunkyIntegration.start(
+                        plugin,
+                        newWorld,
+                        config
+                );
+
+        if (!ok) {
+            plugin.getLogger().warning(
+                    "Chunky could not be started for world: "
+                            + worldName
+            );
+
+            markChunkyWorldComplete(worldName);
+        }
+    }
+
+    private void registerChunkyCompletionHook() {
+        if (this.chunkyCompletionHookRegistered) {
+            return;
+        }
+
+        try {
+            Class<?> apiClass =
+                    Class.forName(
+                            "org.popcraft.chunky.api.ChunkyAPI"
+                    );
+
+            Object api =
+                    Bukkit.getServicesManager()
+                            .load(apiClass);
+
+            if (api == null) {
+                plugin.getLogger().warning(
+                        "Chunky API service not available yet. Completion hook not registered."
+                );
+                return;
+            }
+
+            Method method =
+                    apiClass.getMethod(
+                            "onGenerationComplete",
+                            Consumer.class
+                    );
+
+            Consumer<Object> listener =
+                    this::handleChunkyGenerationCompleteEvent;
+
+            method.invoke(
+                    api,
+                    listener
+            );
+
+            this.chunkyCompletionHookRegistered = true;
+
+            plugin.getLogger().info(
+                    "Chunky completion hook registered."
+            );
+
+        } catch (Throwable t) {
+            plugin.getLogger().warning(
+                    "Could not register Chunky completion hook: "
+                            + t.getClass().getSimpleName()
+                            + " - "
+                            + t.getMessage()
+            );
+        }
+    }
+
+    private void handleChunkyGenerationCompleteEvent(Object event) {
+        String worldName =
+                readWorldFromChunkyEvent(event);
+
+        if (worldName == null || worldName.isBlank()) {
+            return;
+        }
+
+        Bukkit.getScheduler().runTask(
+                plugin,
+                () -> markChunkyWorldComplete(worldName)
+        );
+    }
+
+    private String readWorldFromChunkyEvent(Object event) {
+        if (event == null) {
+            return null;
+        }
+
+        try {
+            Method worldMethod =
+                    event.getClass().getMethod("world");
+
+            Object value =
+                    worldMethod.invoke(event);
+
+            return value == null
+                    ? null
+                    : value.toString();
+
+        } catch (Throwable t) {
+            plugin.getLogger().warning(
+                    "Could not read Chunky completion event world: "
+                            + t.getClass().getSimpleName()
+                            + " - "
+                            + t.getMessage()
+            );
+
+            return null;
+        }
+    }
+
+    private void markChunkyWorldComplete(String worldName) {
+        String key =
+                normalizeWorldName(worldName);
+
+        boolean removed =
+                this.pendingChunkyWorlds.remove(key);
+
+        this.startedChunkyWorlds.remove(key);
+
+        if (removed) {
+            plugin.getLogger().info(
+                    "Chunky finished for reset world: "
+                            + worldName
+                            + ". Remaining: "
+                            + this.pendingChunkyWorlds.size()
+            );
+        }
+
+        if (this.waitingForChunky
+                && this.pendingChunkyWorlds.isEmpty()) {
+            finishMaintenance(
+                    Bukkit.getConsoleSender()
+            );
+        }
+    }
+
+    private void startChunkyWatchdog() {
+        stopChunkyWatchdog();
+
+        this.chunkyWatchdogTaskId =
+                Bukkit.getScheduler().scheduleSyncRepeatingTask(
+                        plugin,
+                        this::checkChunkyRunningState,
+                        20L * 30L,
+                        20L * 30L
+                );
+    }
+
+    private void stopChunkyWatchdog() {
+        if (this.chunkyWatchdogTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(
+                    this.chunkyWatchdogTaskId
+            );
+
+            this.chunkyWatchdogTaskId = -1;
+        }
+    }
+
+    private void checkChunkyRunningState() {
+        if (!this.waitingForChunky) {
+            return;
+        }
+
+        if (this.pendingChunkyWorlds.isEmpty()) {
+            finishMaintenance(
+                    Bukkit.getConsoleSender()
+            );
+            return;
+        }
+
+        Set<String> copy =
+                new HashSet<>(
+                        this.pendingChunkyWorlds
+                );
+
+        for (String worldName : copy) {
+            if (!this.startedChunkyWorlds.contains(worldName)) {
+                continue;
+            }
+
+            Boolean running =
+                    isChunkyRunning(worldName);
+
+            if (Boolean.FALSE.equals(running)) {
+                markChunkyWorldComplete(worldName);
+            }
+        }
+    }
+
+    private Boolean isChunkyRunning(String worldName) {
+        try {
+            Class<?> apiClass =
+                    Class.forName(
+                            "org.popcraft.chunky.api.ChunkyAPI"
+                    );
+
+            Object api =
+                    Bukkit.getServicesManager()
+                            .load(apiClass);
+
+            if (api == null) {
+                return null;
+            }
+
+            Method method =
+                    apiClass.getMethod(
+                            "isRunning",
+                            String.class
+                    );
+
+            Object value =
+                    method.invoke(
+                            api,
+                            worldName
+                    );
+
+            if (value instanceof Boolean b) {
+                return b;
+            }
+
+            return null;
+
+        } catch (Throwable t) {
+            plugin.getLogger().warning(
+                    "Could not query Chunky running state for '"
+                            + worldName
+                            + "': "
+                            + t.getClass().getSimpleName()
+                            + " - "
+                            + t.getMessage()
+            );
+
+            return null;
+        }
+    }
+
+    private String normalizeWorldName(String worldName) {
+        return worldName == null
+                ? ""
+                : worldName.toLowerCase();
     }
 
     private void evacuatePlayers(String worldName) {
