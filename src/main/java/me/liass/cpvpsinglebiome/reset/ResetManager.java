@@ -188,6 +188,21 @@ public class ResetManager {
             return;
         }
 
+        /*
+         * If skip-if-any-player-online is enabled, warning countdowns are suppressed.
+         *
+         * Reason:
+         * With this mode enabled, the reset will not start while normal players are online.
+         * Sending "reset in 5 minutes" or "reset in 1 minute" would be misleading and
+         * creates repeated chat/log spam during postponed resets.
+         *
+         * Countdown warnings are only useful when the reset is allowed to run even while
+         * players are online.
+         */
+        if (config.isSkipIfAnyPlayerOnline()) {
+            return;
+        }
+
         for (Integer warning : config.getWarningMinutes()) {
             if (warning == null) {
                 continue;
