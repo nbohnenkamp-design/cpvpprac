@@ -9,8 +9,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -41,7 +43,10 @@ public class ResetManager {
 
     private final Set<Integer> sentWarnings = new HashSet<>();
 
+    private static final int MAX_WORLD_LOAD_WAIT_SECONDS = 90;
+
     private final Queue<String> chunkyQueue = new ArrayDeque<>();
+    private final Map<String, Integer> chunkyWorldLoadRetries = new HashMap<>();
     private String activeChunkyWorld = null;
 
     private boolean chunkyCompletionHookRegistered = false;
@@ -99,6 +104,7 @@ public class ResetManager {
         this.waitingForChunky = false;
 
         this.chunkyQueue.clear();
+        this.chunkyWorldLoadRetries.clear();
         this.activeChunkyWorld = null;
     }
 
@@ -438,6 +444,7 @@ public class ResetManager {
         this.waitingForChunky = false;
 
         this.chunkyQueue.clear();
+        this.chunkyWorldLoadRetries.clear();
         this.activeChunkyWorld = null;
 
         stopChunkyWatchdog();
@@ -507,7 +514,7 @@ public class ResetManager {
         }
 
         String worldName =
-                this.chunkyQueue.poll();
+                this.chunkyQueue.peek();
 
         if (worldName == null) {
             finishMaintenance(
@@ -520,17 +527,62 @@ public class ResetManager {
                 Bukkit.getWorld(worldName);
 
         if (world == null) {
-            plugin.getLogger().warning(
-                    "Chunky start skipped: world is not loaded: "
-                            + worldName
+            int retries =
+                    this.chunkyWorldLoadRetries.getOrDefault(
+                            normalizeWorldName(worldName),
+                            0
+                    ) + 1;
+
+            this.chunkyWorldLoadRetries.put(
+                    normalizeWorldName(worldName),
+                    retries
             );
 
-            Bukkit.getScheduler().runTask(
+            if (retries == 1 || retries % 5 == 0) {
+                plugin.getLogger().info(
+                        "Chunky waiting for reset world to load: "
+                                + worldName
+                                + " ("
+                                + retries
+                                + "/"
+                                + MAX_WORLD_LOAD_WAIT_SECONDS
+                                + "s)"
+                );
+            }
+
+            if (retries >= MAX_WORLD_LOAD_WAIT_SECONDS) {
+                plugin.getLogger().warning(
+                        "Chunky start skipped after waiting "
+                                + MAX_WORLD_LOAD_WAIT_SECONDS
+                                + "s: world is still not loaded: "
+                                + worldName
+                );
+
+                this.chunkyQueue.poll();
+                this.chunkyWorldLoadRetries.remove(
+                        normalizeWorldName(worldName)
+                );
+
+                Bukkit.getScheduler().runTaskLater(
+                        plugin,
+                        this::startNextChunkyWorld,
+                        20L
+                );
+                return;
+            }
+
+            Bukkit.getScheduler().runTaskLater(
                     plugin,
-                    this::startNextChunkyWorld
+                    this::startNextChunkyWorld,
+                    20L
             );
             return;
         }
+
+        this.chunkyQueue.poll();
+        this.chunkyWorldLoadRetries.remove(
+                normalizeWorldName(worldName)
+        );
 
         this.activeChunkyWorld =
                 worldName;
@@ -557,9 +609,10 @@ public class ResetManager {
 
             this.activeChunkyWorld = null;
 
-            Bukkit.getScheduler().runTask(
+            Bukkit.getScheduler().runTaskLater(
                     plugin,
-                    this::startNextChunkyWorld
+                    this::startNextChunkyWorld,
+                    20L
             );
         }
     }
@@ -575,6 +628,7 @@ public class ResetManager {
         this.waitingForChunky = false;
 
         this.chunkyQueue.clear();
+        this.chunkyWorldLoadRetries.clear();
         this.activeChunkyWorld = null;
 
         stopChunkyWatchdog();
