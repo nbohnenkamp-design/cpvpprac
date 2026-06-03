@@ -4,11 +4,14 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import me.liass.cpvpsinglebiome.CPVPSingleBiomePlugin;
 import me.liass.cpvpsinglebiome.reset.ResetWorldSpec;
 
+import org.bukkit.Difficulty;
+import org.bukkit.GameMode;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class ConfigManager {
@@ -279,6 +282,63 @@ public class ConfigManager {
         int v = this.config.getInt("reset.interval-days", 1);
 
         return Math.max(1, v);
+    }
+
+    public Difficulty getResetDifficulty() {
+        String raw = this.config.getString(
+                "reset.world-settings.difficulty",
+                "HARD"
+        );
+
+        return parseDifficulty(raw);
+    }
+
+    public GameMode getResetGameMode() {
+        String raw = this.config.getString(
+                "reset.world-settings.gamemode",
+                "SURVIVAL"
+        );
+
+        return parseGameMode(raw);
+    }
+
+    public boolean isResetPvpEnabled() {
+        return this.config.getBoolean(
+                "reset.world-settings.pvp",
+                true
+        );
+    }
+
+    private Difficulty parseDifficulty(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Difficulty.HARD;
+        }
+
+        String value = raw.trim().toUpperCase(Locale.ROOT);
+
+        return switch (value) {
+            case "0", "PEACEFUL" -> Difficulty.PEACEFUL;
+            case "1", "EASY" -> Difficulty.EASY;
+            case "2", "NORMAL" -> Difficulty.NORMAL;
+            case "3", "HARD" -> Difficulty.HARD;
+            default -> Difficulty.HARD;
+        };
+    }
+
+    private GameMode parseGameMode(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return GameMode.SURVIVAL;
+        }
+
+        String value = raw.trim().toUpperCase(Locale.ROOT);
+
+        return switch (value) {
+            case "0", "SURVIVAL" -> GameMode.SURVIVAL;
+            case "1", "CREATIVE" -> GameMode.CREATIVE;
+            case "2", "ADVENTURE" -> GameMode.ADVENTURE;
+            case "3", "SPECTATOR" -> GameMode.SPECTATOR;
+            default -> GameMode.SURVIVAL;
+        };
     }
 
     public List<ResetWorldSpec> getResetWorlds() {

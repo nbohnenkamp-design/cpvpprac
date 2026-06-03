@@ -1,5 +1,5 @@
 name: CPVPSingleBiome
-version: 1.2.5
+version: ${project.version}
 main: me.liass.cpvpsinglebiome.CPVPSingleBiomePlugin
 api-version: '1.21'
 
@@ -28,6 +28,7 @@ permissions:
       cpvpsinglebiome.reset: true
       cpvpsinglebiome.reset.now: true
       cpvpsinglebiome.chunky: true
+      cpvpsinglebiome.maintenance.bypass: true
 
   cpvpsinglebiome.reload:
     description: Allows use of /cpvpsb reload
@@ -55,4 +56,8 @@ permissions:
 
   cpvpsinglebiome.chunky:
     description: Manually start Chunky pre-generation via /cpvpsb chunky
+    default: op
+
+  cpvpsinglebiome.maintenance.bypass:
+    description: Allows joining during CPVPSingleBiome reset maintenance
     default: op

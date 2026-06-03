@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import me.liass.cpvpsinglebiome.CPVPSingleBiomePlugin;
 import me.liass.cpvpsinglebiome.chunky.ChunkyIntegration;
@@ -58,7 +59,7 @@ public class CPVPSBCommand implements CommandExecutor {
             return true;
         }
 
-        switch (args[0].toLowerCase()) {
+        switch (args[0].toLowerCase(Locale.ROOT)) {
 
             case "help":
                 sendHelp(sender);
@@ -309,6 +310,7 @@ public class CPVPSBCommand implements CommandExecutor {
         }
 
         WorldInitListener.applyArenaRules(world);
+        applyConfiguredWorldSettings(world);
 
         double borderSize = config.getWorldBorderSize();
 
@@ -324,6 +326,17 @@ public class CPVPSBCommand implements CommandExecutor {
                         + " §acreated with biome §f"
                         + biomeType.getId()
                         + "§a."
+        );
+
+        sender.sendMessage(
+                config.getPrefix()
+                        + "§7Applied world settings: §f"
+                        + config.getResetDifficulty()
+                        + "§7, §f"
+                        + config.getResetGameMode()
+                        + "§7, PvP=§f"
+                        + config.isResetPvpEnabled()
+                        + "§7."
         );
 
         sender.sendMessage(
@@ -401,7 +414,7 @@ public class CPVPSBCommand implements CommandExecutor {
             return;
         }
 
-        String sub = args[1].toLowerCase();
+        String sub = args[1].toLowerCase(Locale.ROOT);
 
         switch (sub) {
 
@@ -489,6 +502,15 @@ public class CPVPSBCommand implements CommandExecutor {
                 "§d  Interval:        §f"
                         + config.getResetIntervalDays()
                         + " day(s)"
+        );
+
+        sender.sendMessage(
+                "§d  World settings:  §f"
+                        + config.getResetDifficulty()
+                        + "§7, §f"
+                        + config.getResetGameMode()
+                        + "§7, PvP=§f"
+                        + config.isResetPvpEnabled()
         );
 
         LocalDate lastReset = resetManager.getLastAutoResetDate();
@@ -593,7 +615,7 @@ public class CPVPSBCommand implements CommandExecutor {
             return;
         }
 
-        String sub = args[1].toLowerCase();
+        String sub = args[1].toLowerCase(Locale.ROOT);
 
         switch (sub) {
 
@@ -677,6 +699,84 @@ public class CPVPSBCommand implements CommandExecutor {
                                 + "§cUnknown chunky subcommand. Use §fstart §cor §fstart-all§c."
                 );
         }
+    }
+
+    private void applyConfiguredWorldSettings(World world) {
+        if (world == null) {
+            return;
+        }
+
+        world.setDifficulty(
+                config.getResetDifficulty()
+        );
+
+        world.setPVP(
+                config.isResetPvpEnabled()
+        );
+
+        applyMultiverseWorldSettings(
+                world.getName()
+        );
+
+        plugin.getLogger().info(
+                "Applied world settings to '"
+                        + world.getName()
+                        + "': difficulty="
+                        + config.getResetDifficulty()
+                        + ", gamemode="
+                        + config.getResetGameMode()
+                        + ", pvp="
+                        + config.isResetPvpEnabled()
+        );
+    }
+
+    private void applyMultiverseWorldSettings(String worldName) {
+        if (worldName == null || worldName.isBlank()) {
+            return;
+        }
+
+        Plugin multiverse =
+                Bukkit.getPluginManager().getPlugin(
+                        "Multiverse-Core"
+                );
+
+        if (multiverse == null || !multiverse.isEnabled()) {
+            plugin.getLogger().warning(
+                    "Multiverse-Core is not available. Bukkit world settings were applied, but Multiverse world settings were not updated for: "
+                            + worldName
+            );
+            return;
+        }
+
+        String difficulty =
+                config.getResetDifficulty()
+                        .name()
+                        .toLowerCase(Locale.ROOT);
+
+        String gameMode =
+                config.getResetGameMode()
+                        .name()
+                        .toLowerCase(Locale.ROOT);
+
+        String pvp =
+                Boolean.toString(
+                        config.isResetPvpEnabled()
+                );
+
+        Bukkit.dispatchCommand(
+                Bukkit.getConsoleSender(),
+                "mv modify " + worldName + " set difficulty " + difficulty
+        );
+
+        Bukkit.dispatchCommand(
+                Bukkit.getConsoleSender(),
+                "mv modify " + worldName + " set gamemode " + gameMode
+        );
+
+        Bukkit.dispatchCommand(
+                Bukkit.getConsoleSender(),
+                "mv modify " + worldName + " set pvp " + pvp
+        );
     }
 
     private boolean hasPermission(

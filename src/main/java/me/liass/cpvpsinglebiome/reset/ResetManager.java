@@ -12,6 +12,7 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -44,6 +45,7 @@ public class ResetManager {
     private final Set<Integer> sentWarnings = new HashSet<>();
 
     private static final int MAX_WORLD_LOAD_WAIT_SECONDS = 90;
+    private static final int MAX_WORLD_SETTINGS_WAIT_SECONDS = 90;
 
     private final Queue<String> chunkyQueue = new ArrayDeque<>();
     private final Map<String, Integer> chunkyWorldLoadRetries = new HashMap<>();
@@ -579,6 +581,8 @@ public class ResetManager {
             return;
         }
 
+        applyConfiguredWorldSettings(world);
+
         this.chunkyQueue.poll();
         this.chunkyWorldLoadRetries.remove(
                 normalizeWorldName(worldName)
@@ -750,6 +754,131 @@ public class ResetManager {
                         + worldName
                         + " normal -g CPVPSingleBiome:"
                         + biomeName
+        );
+
+        ensureWorldSettingsApplied(
+                worldName,
+                0
+        );
+    }
+
+    private void ensureWorldSettingsApplied(
+            String worldName,
+            int attempt
+    ) {
+        World world =
+                Bukkit.getWorld(worldName);
+
+        if (world != null) {
+            applyConfiguredWorldSettings(world);
+            return;
+        }
+
+        if (attempt >= MAX_WORLD_SETTINGS_WAIT_SECONDS) {
+            plugin.getLogger().warning(
+                    "Could not apply world settings after reset. World is still not loaded: "
+                            + worldName
+            );
+            return;
+        }
+
+        if (attempt == 0 || attempt % 5 == 0) {
+            plugin.getLogger().info(
+                    "Waiting to apply world settings after reset: "
+                            + worldName
+                            + " ("
+                            + attempt
+                            + "/"
+                            + MAX_WORLD_SETTINGS_WAIT_SECONDS
+                            + "s)"
+            );
+        }
+
+        Bukkit.getScheduler().runTaskLater(
+                plugin,
+                () -> ensureWorldSettingsApplied(
+                        worldName,
+                        attempt + 1
+                ),
+                20L
+        );
+    }
+
+    private void applyConfiguredWorldSettings(World world) {
+        if (world == null) {
+            return;
+        }
+
+        world.setDifficulty(
+                config.getResetDifficulty()
+        );
+
+        world.setPVP(
+                config.isResetPvpEnabled()
+        );
+
+        applyMultiverseWorldSettings(
+                world.getName()
+        );
+
+        plugin.getLogger().info(
+                "Applied world settings to '"
+                        + world.getName()
+                        + "': difficulty="
+                        + config.getResetDifficulty()
+                        + ", gamemode="
+                        + config.getResetGameMode()
+                        + ", pvp="
+                        + config.isResetPvpEnabled()
+        );
+    }
+
+    private void applyMultiverseWorldSettings(String worldName) {
+        if (worldName == null || worldName.isBlank()) {
+            return;
+        }
+
+        org.bukkit.plugin.Plugin multiverse =
+                Bukkit.getPluginManager().getPlugin(
+                        "Multiverse-Core"
+                );
+
+        if (multiverse == null || !multiverse.isEnabled()) {
+            plugin.getLogger().warning(
+                    "Multiverse-Core is not available. Bukkit world settings were applied, but Multiverse world settings were not updated for: "
+                            + worldName
+            );
+            return;
+        }
+
+        String difficulty =
+                config.getResetDifficulty()
+                        .name()
+                        .toLowerCase(Locale.ROOT);
+
+        String gameMode =
+                config.getResetGameMode()
+                        .name()
+                        .toLowerCase(Locale.ROOT);
+
+        String pvp =
+                Boolean.toString(
+                        config.isResetPvpEnabled()
+                );
+
+        Bukkit.dispatchCommand(
+                Bukkit.getConsoleSender(),
+                "mv modify " + worldName + " set difficulty " + difficulty
+        );
+
+        Bukkit.dispatchCommand(
+                Bukkit.getConsoleSender(),
+                "mv modify " + worldName + " set gamemode " + gameMode
+        );
+
+        Bukkit.dispatchCommand(
+                Bukkit.getConsoleSender(),
+                "mv modify " + worldName + " set pvp " + pvp
         );
     }
 
@@ -981,7 +1110,7 @@ public class ResetManager {
     private String normalizeWorldName(String worldName) {
         return worldName == null
                 ? ""
-                : worldName.toLowerCase();
+                : worldName.toLowerCase(Locale.ROOT);
     }
 
     private void evacuatePlayers(String worldName) {

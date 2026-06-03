@@ -6,7 +6,7 @@
 
     <groupId>com.cpvpprac</groupId>
     <artifactId>CPVPSingleBiome</artifactId>
-    <version>1.2.5</version>
+    <version>1.2.6</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -33,7 +33,8 @@
 
     <build>
         <defaultGoal>clean package</defaultGoal>
-        <finalName>CPVPSingleBiome</finalName>
+        <finalName>CPVPSingleBiome-${project.version}</finalName>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -45,6 +46,7 @@
                 </configuration>
             </plugin>
         </plugins>
+
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

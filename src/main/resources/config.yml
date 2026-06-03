@@ -90,7 +90,12 @@ reset:
 
   timezone: "Europe/Berlin"              # Germany, includes summer/winter time
 
-  interval-days: 7                       # 1 daily | 7 weekly
+  interval-days: 30                       # 1 daily | 7 weekly
+
+  world-settings:
+    difficulty: HARD                     # PEACEFUL / EASY / NORMAL / HARD
+    gamemode: SURVIVAL                   # SURVIVAL / CREATIVE / ADVENTURE / SPECTATOR
+    pvp: true                            # true = PvP enabled after reset
 
   fallback-world: "newspawn"             # players are teleported here before reset
 
