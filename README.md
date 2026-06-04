@@ -1,4 +1,4 @@
-# CPVPSingleBiome v1.2.6 Stable
+# CPVPSingleBiome v1.2.7 Stable
 
 Crystal PvP focused single-biome terrain generator for Paper 1.21.11.
 
