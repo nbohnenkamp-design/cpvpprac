@@ -210,6 +210,13 @@ public class ConfigManager {
                 true
         );
     }
+    
+    public boolean isBlockJoinsDuringChunky() {
+        return this.config.getBoolean(
+                "reset.block-joins-during-chunky",
+                false
+        );
+    }
 
     public String getMaintenanceBypassPermission() {
         return this.config.getString(

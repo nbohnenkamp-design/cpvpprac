@@ -120,11 +120,15 @@ public class ResetManager {
     }
 
     public boolean isMaintenanceActive() {
-        if (!config.isBlockJoinsDuringReset()) {
-            return false;
+        if (this.resetInProgress) {
+            return config.isBlockJoinsDuringReset();
         }
 
-        return this.resetInProgress || this.waitingForChunky;
+        if (this.waitingForChunky) {
+            return config.isBlockJoinsDuringChunky();
+        }
+
+        return false;
     }
 
     public boolean canBypassMaintenance(Player player) {
@@ -453,7 +457,7 @@ public class ResetManager {
 
         if (config.isBlockJoinsDuringReset()) {
             plugin.getLogger().info(
-                    "Join guard enabled: normal players are blocked during arena reset."
+                    "Join guard enabled: normal players are blocked during arena reset phase."
             );
         }
     }
@@ -499,6 +503,16 @@ public class ResetManager {
                 "Arena reset world phase complete. Chunky queue: "
                         + String.join(", ", this.chunkyQueue)
         );
+
+        if (config.isBlockJoinsDuringChunky()) {
+            plugin.getLogger().info(
+                    "Join guard remains enabled during Chunky pre-generation."
+            );
+        } else {
+            plugin.getLogger().info(
+                    "Join guard disabled during Chunky pre-generation. Normal players may join."
+            );
+        }
 
         registerChunkyCompletionHook();
         startChunkyWatchdog();
@@ -646,7 +660,7 @@ public class ResetManager {
 
         if (wasActive) {
             plugin.getLogger().info(
-                    "Arena reset and Chunky pre-generation complete. Join guard disabled."
+                    "Arena reset and Chunky pre-generation complete."
             );
 
             sender.sendMessage(
@@ -817,6 +831,8 @@ public class ResetManager {
                 config.isResetPvpEnabled()
         );
 
+        applyConfiguredWorldBorder(world);
+
         applyMultiverseWorldSettings(
                 world.getName()
         );
@@ -830,6 +846,41 @@ public class ResetManager {
                         + config.getResetGameMode()
                         + ", pvp="
                         + config.isResetPvpEnabled()
+                        + ", border="
+                        + config.getWorldBorderSize()
+        );
+    }
+
+    private void applyConfiguredWorldBorder(World world) {
+        if (world == null) {
+            return;
+        }
+
+        double borderSize =
+                config.getWorldBorderSize();
+
+        if (borderSize <= 0.0D) {
+            plugin.getLogger().info(
+                    "World border disabled for '"
+                            + world.getName()
+                            + "'."
+            );
+            return;
+        }
+
+        world.getWorldBorder().setCenter(
+                world.getSpawnLocation()
+        );
+
+        world.getWorldBorder().setSize(
+                borderSize
+        );
+
+        plugin.getLogger().info(
+                "Applied world border to '"
+                        + world.getName()
+                        + "': center=spawn, size="
+                        + borderSize
         );
     }
 

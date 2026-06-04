@@ -74,8 +74,10 @@ decoration:
 # -----------------------------------------------------------------------------
 # World settings
 # -----------------------------------------------------------------------------
+# Minecraft worldborder size is a diameter, not a radius.
+# 20000 means roughly X/Z -10000 to +10000 around the border center.
 
-world-border-size: 1200                  # 0 = disabled
+world-border-size: 20000                 # 0 = disabled | 20000 = X/Z -10000 to +10000
 
 # -----------------------------------------------------------------------------
 # Automatic world reset
@@ -90,7 +92,7 @@ reset:
 
   timezone: "Europe/Berlin"              # Germany, includes summer/winter time
 
-  interval-days: 30                       # 1 daily | 7 weekly
+  interval-days: 30                      # 1 daily | 7 weekly | 30 monthly-ish
 
   world-settings:
     difficulty: HARD                     # PEACEFUL / EASY / NORMAL / HARD
@@ -99,17 +101,19 @@ reset:
 
   fallback-world: "newspawn"             # players are teleported here before reset
 
-  skip-if-any-player-online: true        # postpone if normal players are online
+  skip-if-any-player-online: true        # postpone automatic reset while normal players are online
 
-  retry-after-minutes: 10                # check again after this many minutes
+  retry-after-minutes: 10                # check again after this many minutes if reset was postponed
 
-  block-joins-during-reset: true         # block normal players during reset and Chunky
+  block-joins-during-reset: true         # block normal players during world delete/create phase
+
+  block-joins-during-chunky: false       # false = normal players may join while Chunky is running
 
   maintenance-bypass-permission: "cpvpsinglebiome.maintenance.bypass"
 
   maintenance-kick-message: "§c[CPVPSingleBiome] §fArenas are resetting. Please reconnect shortly."
 
-  warning-enabled: true                  # broadcast warnings
+  warning-enabled: true                  # broadcast countdown warnings if reset is allowed to run with players online
 
   warning-minutes: [10, 5, 1]            # countdown warnings before reset
 
