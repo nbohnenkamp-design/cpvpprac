@@ -6,7 +6,7 @@ api-version: '1.21'
 load: STARTUP
 
 description: A Single-Biome World Generator Plugin for Crystal PvP servers
-authors: [ liass ]
+authors: [ CPVPPRAC ]
 
 softdepend: [ Multiverse-Core, Chunky ]
 
