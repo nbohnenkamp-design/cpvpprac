@@ -1,5 +1,10 @@
 package me.liass.cpvpsinglebiome.config;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -93,7 +98,7 @@ public class ConfigManager {
     public double getBiomeDecorationDensity(String biome) {
         String path =
                 "decoration.biomes."
-                        + biome.toLowerCase()
+                        + biome.toLowerCase(Locale.ROOT)
                         + ".density";
 
         if (this.config.contains(path)) {
@@ -112,7 +117,7 @@ public class ConfigManager {
     public double getBiomeTreeDensity(String biome) {
         String path =
                 "decoration.biomes."
-                        + biome.toLowerCase()
+                        + biome.toLowerCase(Locale.ROOT)
                         + ".tree-density";
 
         if (this.config.contains(path)) {
@@ -210,7 +215,7 @@ public class ConfigManager {
                 true
         );
     }
-    
+
     public boolean isBlockJoinsDuringChunky() {
         return this.config.getBoolean(
                 "reset.block-joins-during-chunky",
@@ -289,6 +294,218 @@ public class ConfigManager {
         int v = this.config.getInt("reset.interval-days", 1);
 
         return Math.max(1, v);
+    }
+
+    public LocalDate getLastResetDate() {
+        String raw = this.config.getString(
+                "reset.last-reset-date",
+                ""
+        );
+
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(raw.trim());
+        } catch (Exception e) {
+            this.plugin.getLogger().warning(
+                    "Invalid reset.last-reset-date in config.yml: '"
+                            + raw
+                            + "'. Expected format: YYYY-MM-DD"
+            );
+
+            return null;
+        }
+    }
+
+    public void setLastResetDate(LocalDate date) {
+        String value =
+                date == null
+                        ? ""
+                        : date.toString();
+
+        this.config.set(
+                "reset.last-reset-date",
+                value
+        );
+
+        writeLastResetDateToConfigFile(value);
+
+        this.plugin.reloadConfig();
+        this.config = this.plugin.getConfig();
+    }
+
+    private void writeLastResetDateToConfigFile(String value) {
+        Path configPath =
+                this.plugin.getDataFolder()
+                        .toPath()
+                        .resolve("config.yml");
+
+        if (!Files.exists(configPath)) {
+            this.plugin.getLogger().warning(
+                    "Could not update reset.last-reset-date because config.yml does not exist yet. Falling back to saveConfig()."
+            );
+
+            this.plugin.saveConfig();
+            return;
+        }
+
+        List<String> lines;
+
+        try {
+            lines =
+                    Files.readAllLines(
+                            configPath,
+                            StandardCharsets.UTF_8
+                    );
+
+        } catch (IOException e) {
+            this.plugin.getLogger().warning(
+                    "Could not read config.yml to update reset.last-reset-date: "
+                            + e.getMessage()
+                            + ". Falling back to saveConfig()."
+            );
+
+            this.plugin.saveConfig();
+            return;
+        }
+
+        List<String> out =
+                new ArrayList<>();
+
+        boolean inResetSection =
+                false;
+
+        boolean wroteLastResetDate =
+                false;
+
+        for (String line : lines) {
+            String trimmed =
+                    line.trim();
+
+            if (isTopLevelYamlSection(line, trimmed)) {
+                inResetSection =
+                        trimmed.equals("reset:");
+            }
+
+            if (inResetSection
+                    && trimmed.startsWith("last-reset-date:")) {
+                out.add(
+                        rebuildLastResetDateLine(
+                                line,
+                                value
+                        )
+                );
+
+                wroteLastResetDate = true;
+                continue;
+            }
+
+            out.add(line);
+
+            if (inResetSection
+                    && !wroteLastResetDate
+                    && trimmed.startsWith("interval-days:")) {
+                out.add(
+                        "  last-reset-date: "
+                                + quoteYamlString(value)
+                                + "                    # YYYY-MM-DD | auto-written after full reset; empty = no full reset recorded yet"
+                );
+
+                wroteLastResetDate = true;
+            }
+        }
+
+        if (!wroteLastResetDate) {
+            this.plugin.getLogger().warning(
+                    "Could not find reset.last-reset-date or reset.interval-days in config.yml. Falling back to saveConfig()."
+            );
+
+            this.plugin.saveConfig();
+            return;
+        }
+
+        try {
+            Files.write(
+                    configPath,
+                    out,
+                    StandardCharsets.UTF_8
+            );
+
+        } catch (IOException e) {
+            this.plugin.getLogger().warning(
+                    "Could not write reset.last-reset-date to config.yml: "
+                            + e.getMessage()
+                            + ". Falling back to saveConfig()."
+            );
+
+            this.plugin.saveConfig();
+        }
+    }
+
+    private boolean isTopLevelYamlSection(
+            String line,
+            String trimmed
+    ) {
+        if (trimmed.isEmpty()) {
+            return false;
+        }
+
+        if (trimmed.startsWith("#")) {
+            return false;
+        }
+
+        if (line.startsWith(" ")
+                || line.startsWith("\t")) {
+            return false;
+        }
+
+        return trimmed.endsWith(":");
+    }
+
+    private String rebuildLastResetDateLine(
+            String originalLine,
+            String value
+    ) {
+        int keyIndex =
+                originalLine.indexOf("last-reset-date:");
+
+        String indent =
+                keyIndex > 0
+                        ? originalLine.substring(0, keyIndex)
+                        : "";
+
+        int commentIndex =
+                originalLine.indexOf('#');
+
+        String comment =
+                commentIndex >= 0
+                        ? originalLine.substring(commentIndex)
+                        : "";
+
+        if (comment.isBlank()) {
+            return indent
+                    + "last-reset-date: "
+                    + quoteYamlString(value);
+        }
+
+        return indent
+                + "last-reset-date: "
+                + quoteYamlString(value)
+                + "                    "
+                + comment;
+    }
+
+    private String quoteYamlString(String value) {
+        String safe =
+                value == null
+                        ? ""
+                        : value.replace("\"", "\\\"");
+
+        return "\""
+                + safe
+                + "\"";
     }
 
     public Difficulty getResetDifficulty() {
