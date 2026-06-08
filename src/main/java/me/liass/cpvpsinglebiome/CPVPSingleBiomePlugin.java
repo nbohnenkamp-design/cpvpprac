@@ -8,6 +8,7 @@ import me.liass.cpvpsinglebiome.generator.SingleBiomeChunkGenerator;
 import me.liass.cpvpsinglebiome.listener.MaintenanceJoinListener;
 import me.liass.cpvpsinglebiome.listener.WorldInitListener;
 import me.liass.cpvpsinglebiome.reset.ResetManager;
+import me.liass.cpvpsinglebiome.task.SnowAtmosphereTask;
 
 import org.bukkit.command.PluginCommand;
 import org.bukkit.generator.ChunkGenerator;
@@ -17,6 +18,8 @@ public class CPVPSingleBiomePlugin extends JavaPlugin {
 
     private ConfigManager configManager;
     private ResetManager resetManager;
+
+    private int snowAtmosphereTaskId = -1;
 
     @Override
     public void onLoad() {
@@ -60,6 +63,8 @@ public class CPVPSingleBiomePlugin extends JavaPlugin {
                 () -> this.resetManager.start()
         );
 
+        startSnowAtmosphereTask();
+
         getLogger().info(
                 "CPVPSingleBiome v"
                         + getDescription().getVersion()
@@ -81,6 +86,8 @@ public class CPVPSingleBiomePlugin extends JavaPlugin {
         if (this.resetManager != null) {
             this.resetManager.stop();
         }
+
+        stopSnowAtmosphereTask();
 
         getLogger().info("CPVPSingleBiome disabled.");
     }
@@ -128,6 +135,46 @@ public class CPVPSingleBiomePlugin extends JavaPlugin {
                     this.configManager,
                     BiomeType.DESERT
             );
+        }
+    }
+
+    private void startSnowAtmosphereTask() {
+        stopSnowAtmosphereTask();
+
+        if (!this.configManager.isSnowflakeParticlesEnabled()) {
+            getLogger().info(
+                    "Snow atmosphere particles are disabled."
+            );
+            return;
+        }
+
+        int intervalTicks =
+                this.configManager.getSnowflakeParticleIntervalTicks();
+
+        this.snowAtmosphereTaskId =
+                getServer().getScheduler().scheduleSyncRepeatingTask(
+                        this,
+                        new SnowAtmosphereTask(
+                                this.configManager
+                        ),
+                        intervalTicks,
+                        intervalTicks
+                );
+
+        getLogger().info(
+                "Snow atmosphere particles enabled. Interval: "
+                        + intervalTicks
+                        + " tick(s)."
+        );
+    }
+
+    private void stopSnowAtmosphereTask() {
+        if (this.snowAtmosphereTaskId != -1) {
+            getServer().getScheduler().cancelTask(
+                    this.snowAtmosphereTaskId
+            );
+
+            this.snowAtmosphereTaskId = -1;
         }
     }
 
