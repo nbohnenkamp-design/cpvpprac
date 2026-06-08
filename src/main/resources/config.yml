@@ -72,6 +72,46 @@ decoration:
       tree-density: 0.0
 
 # -----------------------------------------------------------------------------
+# Snow biome atmosphere
+# -----------------------------------------------------------------------------
+# Designed for open Crystal PvP:
+# light snow ambience, thin snow layers, small ice accents,
+# rare frozen ponds, sparse rock details and very few trees.
+#
+# No powder snow, no ice-spike fields, no dense structures.
+
+snow-effects:
+
+  snowflake-particles:
+    enabled: true                        # true = light ambient snow particles in snow worlds
+    interval-ticks: 20                   # 20 ticks = once per second
+    particles-per-player: 5              # low value to avoid visual spam
+    radius: 10                           # horizontal particle spread around players
+    height: 4                            # vertical particle spread above players
+
+  terrain:
+    snow-layers: true                    # place thin snow layers on suitable ground
+    snow-layer-chance: 0.55              # 0.0 none | 0.55 light/medium | 1.0 everywhere
+    max-snow-layer-height: 1             # 1 = thin snow only, good for PvP readability
+
+  ice-details:
+    enabled: true                        # small ice accents and rare frozen ponds
+    pond-chance: 0.005                   # very rare frozen ponds
+    small-ice-patch-chance: 0.02         # small local ice accents
+    max-pond-radius: 3                   # keep ponds small, no large slippery zones
+    max-ice-patch-radius: 3              # small patches only
+    use-blue-ice: false                  # false = no fast blue-ice movement
+
+  rocks:
+    enabled: true                        # small stone/ice orientation details
+    chance: 0.025                        # sparse rocks
+    max-size: 4                          # small details only, no big structures
+
+  trees:
+    enabled: true                        # allow rare small snow trees
+    chance: 0.04                         # very sparse, no forests
+
+# -----------------------------------------------------------------------------
 # World settings
 # -----------------------------------------------------------------------------
 # Minecraft worldborder size is a diameter, not a radius.

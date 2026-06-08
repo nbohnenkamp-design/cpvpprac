@@ -158,6 +158,201 @@ public class ConfigManager {
         return v;
     }
 
+    private double clampProbability(double v) {
+        if (v < 0.0D) {
+            return 0.0D;
+        }
+
+        if (v > 1.0D) {
+            return 1.0D;
+        }
+
+        return v;
+    }
+
+    public boolean isSnowflakeParticlesEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.snowflake-particles.enabled",
+                true
+        );
+    }
+
+    public int getSnowflakeParticleIntervalTicks() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.snowflake-particles.interval-ticks",
+                        20
+                );
+
+        return Math.max(5, v);
+    }
+
+    public int getSnowflakeParticlesPerPlayer() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.snowflake-particles.particles-per-player",
+                        5
+                );
+
+        return Math.max(0, Math.min(50, v));
+    }
+
+    public double getSnowflakeParticleRadius() {
+        double v =
+                this.config.getDouble(
+                        "snow-effects.snowflake-particles.radius",
+                        10.0D
+                );
+
+        if (v < 1.0D) {
+            return 1.0D;
+        }
+
+        if (v > 48.0D) {
+            return 48.0D;
+        }
+
+        return v;
+    }
+
+    public double getSnowflakeParticleHeight() {
+        double v =
+                this.config.getDouble(
+                        "snow-effects.snowflake-particles.height",
+                        4.0D
+                );
+
+        if (v < 1.0D) {
+            return 1.0D;
+        }
+
+        if (v > 24.0D) {
+            return 24.0D;
+        }
+
+        return v;
+    }
+
+    public boolean isSnowLayersEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.terrain.snow-layers",
+                true
+        );
+    }
+
+    public double getSnowLayerChance() {
+        return clampProbability(
+                this.config.getDouble(
+                        "snow-effects.terrain.snow-layer-chance",
+                        0.55D
+                )
+        );
+    }
+
+    public int getSnowMaxLayerHeight() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.terrain.max-snow-layer-height",
+                        1
+                );
+
+        return Math.max(1, Math.min(8, v));
+    }
+
+    public boolean isSnowIceDetailsEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.ice-details.enabled",
+                true
+        );
+    }
+
+    public double getSnowPondChance() {
+        return clampProbability(
+                this.config.getDouble(
+                        "snow-effects.ice-details.pond-chance",
+                        0.005D
+                )
+        );
+    }
+
+    public double getSnowSmallIcePatchChance() {
+        return clampProbability(
+                this.config.getDouble(
+                        "snow-effects.ice-details.small-ice-patch-chance",
+                        0.02D
+                )
+        );
+    }
+
+    public int getSnowMaxPondRadius() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.ice-details.max-pond-radius",
+                        3
+                );
+
+        return Math.max(1, Math.min(8, v));
+    }
+
+    public int getSnowMaxIcePatchRadius() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.ice-details.max-ice-patch-radius",
+                        3
+                );
+
+        return Math.max(1, Math.min(8, v));
+    }
+
+    public boolean isSnowBlueIceEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.ice-details.use-blue-ice",
+                false
+        );
+    }
+
+    public boolean isSnowRocksEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.rocks.enabled",
+                true
+        );
+    }
+
+    public double getSnowRockChance() {
+        return clampProbability(
+                this.config.getDouble(
+                        "snow-effects.rocks.chance",
+                        0.025D
+                )
+        );
+    }
+
+    public int getSnowRockMaxSize() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.rocks.max-size",
+                        4
+                );
+
+        return Math.max(1, Math.min(8, v));
+    }
+
+    public boolean isSnowTreesEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.trees.enabled",
+                true
+        );
+    }
+
+    public double getSnowTreeChance() {
+        return clampProbability(
+                this.config.getDouble(
+                        "snow-effects.trees.chance",
+                        0.04D
+                )
+        );
+    }
+
     public boolean isResetEnabled() {
         return this.config.getBoolean("reset.enabled", false);
     }
