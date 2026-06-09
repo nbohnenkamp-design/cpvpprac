@@ -1,90 +1,185 @@
 CPVPSingleBiome – GitHub Workflow
 
-# -----------------------------------------------------------------------------
-# Build prüfen
-# -----------------------------------------------------------------------------
+Projektverzeichnis
 
 cd ~/IdeaProjects/cpvpprac-stable-work
 
+---
+
+Build prüfen
+
+Vor jedem Commit sicherstellen, dass das Plugin erfolgreich baut:
+
 mvn clean package
 
-# -----------------------------------------------------------------------------
-# Git Status prüfen
-# -----------------------------------------------------------------------------
+Die fertige JAR befindet sich anschließend in:
+
+target/CPVPSingleBiome-<version>.jar
+
+---
+
+Git Status prüfen
 
 git status
 
-# -----------------------------------------------------------------------------
-# Änderungen übernehmen
-# -----------------------------------------------------------------------------
+Prüfen, welche Dateien geändert wurden.
+
+---
+
+Änderungen übernehmen
 
 git add .
 
-# -----------------------------------------------------------------------------
-# Commit erstellen
-# -----------------------------------------------------------------------------
+Alternativ nur einzelne Dateien:
+
+git add src/main/java/...
+git add src/main/resources/...
+
+---
+
+Commit erstellen
 
 git commit -m "Kurze Beschreibung der Änderung"
 
-# Beispiele:
-# "Improve snow spruce generation"
-# "Add biome specific decoration config"
-# "Fix mushroom structures"
+Beispiele:
 
-# -----------------------------------------------------------------------------
-# Nach GitHub hochladen
-# -----------------------------------------------------------------------------
+Improve snow spruce generation
+Add end biome reset support
+Fix Paper dimension reset handling
+Improve Multiverse reset handling
+Update README
 
-git push origin main
+---
 
-# =============================================================================
-# STABILE RELEASES
-# =============================================================================
-# Nur verwenden wenn wirklich stabile Version veröffentlicht werden soll.
-# Niemals denselben Tag erneut verwenden.
-# =============================================================================
+Nach GitHub hochladen
 
-# Beispiel neue stabile Version:
+git push
 
-git tag stable-cpvpsinglebiome-v1.2.0
+Falls GitHub einen neueren Stand hat:
 
-git push origin stable-cpvpsinglebiome-v1.2.0
+git pull --rebase origin main
+git push
 
-# Danach:
-# GitHub -> Releases -> neuen Release erstellen
-# JAR aus target/ hochladen
+---
 
-# -----------------------------------------------------------------------------
-# WICHTIG
-# -----------------------------------------------------------------------------
+Neue stabile Version veröffentlichen
 
-# target/ niemals committen
-# .gitignore schützt davor
+Nur verwenden, wenn eine neue öffentliche Version veröffentlicht werden soll.
 
-# Alte stabile Tags NICHT wiederverwenden
-# Immer neue Versionsnummern nutzen
+---
 
-# Empfohlenes Versionsschema:
-# 1.1.0
-# 1.1.1
-# 1.2.0
-# 2.0.0
+Versionsnummer erhöhen
 
-GitHub neue stable setzen:
-xed ~/IdeaProjects/cpvpprac-stable-work/pom.xml
-xed ~/IdeaProjects/cpvpprac-stable-work/README.md
+Dateien anpassen:
 
-#bauen
-cd ~/IdeaProjects/cpvpprac-stable-work
+xed pom.xml
+xed src/main/resources/plugin.yml
+
+Beispiel:
+
+1.2.12 -> 1.2.13
+
+---
+
+Build erstellen
+
 mvn clean package
 
-#GitHub
+---
+
+Änderungen committen
+
 git add .
-git commit -m "Release stable CPVPSingleBiome v1.2.0"
 
-git tag stable-cpvpsinglebiome-v1.2.0
+git commit -m "Release v1.2.13"
 
-git push origin main
-git push origin stable-cpvpsinglebiome-v1.2.0
+---
 
+Tag erstellen
 
+git tag v1.2.13
+
+---
+
+Nach GitHub hochladen
+
+git push
+git push origin v1.2.13
+
+---
+
+GitHub Release erstellen
+
+1. GitHub öffnen
+2. Releases öffnen
+3. Create Release
+4. Tag auswählen (z. B. v1.2.13)
+5. Release Notes schreiben
+6. JAR aus "target/" hochladen
+7. Release veröffentlichen
+
+---
+
+Modrinth Release
+
+Nur für echte Releases verwenden.
+
+Typischer Ablauf:
+
+1. Version auf GitHub taggen
+2. JAR hochladen
+3. Changelog schreiben
+4. Veröffentlichung zur Prüfung einreichen
+
+Kleine Wartungs-Commits müssen nicht zwingend als Modrinth-Version veröffentlicht werden.
+
+---
+
+README aktualisieren
+
+Bei neuen Funktionen prüfen:
+
+xed README.md
+
+Aktualisieren wenn nötig:
+
+- neue Biome
+- neue Commands
+- neue Config-Optionen
+- neue Kompatibilität
+- neue Screenshots
+
+---
+
+Wichtige Hinweise
+
+- "target/" niemals committen
+- Alte Tags niemals wiederverwenden
+- Für jede veröffentlichte Version einen neuen Tag verwenden
+- Vor jedem Release immer "mvn clean package" ausführen
+- Vor jedem Release mindestens einen Testlauf durchführen
+
+---
+
+Aktuell getestete Plattformen
+
+- Paper 1.21.11
+- Paper 26.1.2
+- Java 21+
+
+CPVPSingleBiome wurde erfolgreich auf beiden Plattformen getestet und enthält Kompatibilitätsbehandlung für klassische World-Ordner sowie neuere Paper-Dimension-Ordner.
+
+---
+
+Aktuelles Versionsschema
+
+v1.2.11
+v1.2.12
+v1.2.13
+
+Beispiele:
+
+v1.3.0   = neue Funktionen
+v1.3.1   = Bugfixes
+v1.4.0   = größere Erweiterungen
+v2.0.0   = inkompatible Änderungen
