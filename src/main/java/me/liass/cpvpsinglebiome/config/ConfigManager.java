@@ -1,5 +1,10 @@
 package me.liass.cpvpsinglebiome.config;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -93,7 +98,7 @@ public class ConfigManager {
     public double getBiomeDecorationDensity(String biome) {
         String path =
                 "decoration.biomes."
-                        + biome.toLowerCase()
+                        + biome.toLowerCase(Locale.ROOT)
                         + ".density";
 
         if (this.config.contains(path)) {
@@ -112,7 +117,7 @@ public class ConfigManager {
     public double getBiomeTreeDensity(String biome) {
         String path =
                 "decoration.biomes."
-                        + biome.toLowerCase()
+                        + biome.toLowerCase(Locale.ROOT)
                         + ".tree-density";
 
         if (this.config.contains(path)) {
@@ -151,6 +156,201 @@ public class ConfigManager {
         }
 
         return v;
+    }
+
+    private double clampProbability(double v) {
+        if (v < 0.0D) {
+            return 0.0D;
+        }
+
+        if (v > 1.0D) {
+            return 1.0D;
+        }
+
+        return v;
+    }
+
+    public boolean isSnowflakeParticlesEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.snowflake-particles.enabled",
+                true
+        );
+    }
+
+    public int getSnowflakeParticleIntervalTicks() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.snowflake-particles.interval-ticks",
+                        20
+                );
+
+        return Math.max(5, v);
+    }
+
+    public int getSnowflakeParticlesPerPlayer() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.snowflake-particles.particles-per-player",
+                        5
+                );
+
+        return Math.max(0, Math.min(50, v));
+    }
+
+    public double getSnowflakeParticleRadius() {
+        double v =
+                this.config.getDouble(
+                        "snow-effects.snowflake-particles.radius",
+                        10.0D
+                );
+
+        if (v < 1.0D) {
+            return 1.0D;
+        }
+
+        if (v > 48.0D) {
+            return 48.0D;
+        }
+
+        return v;
+    }
+
+    public double getSnowflakeParticleHeight() {
+        double v =
+                this.config.getDouble(
+                        "snow-effects.snowflake-particles.height",
+                        4.0D
+                );
+
+        if (v < 1.0D) {
+            return 1.0D;
+        }
+
+        if (v > 24.0D) {
+            return 24.0D;
+        }
+
+        return v;
+    }
+
+    public boolean isSnowLayersEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.terrain.snow-layers",
+                true
+        );
+    }
+
+    public double getSnowLayerChance() {
+        return clampProbability(
+                this.config.getDouble(
+                        "snow-effects.terrain.snow-layer-chance",
+                        0.55D
+                )
+        );
+    }
+
+    public int getSnowMaxLayerHeight() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.terrain.max-snow-layer-height",
+                        1
+                );
+
+        return Math.max(1, Math.min(8, v));
+    }
+
+    public boolean isSnowIceDetailsEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.ice-details.enabled",
+                true
+        );
+    }
+
+    public double getSnowPondChance() {
+        return clampProbability(
+                this.config.getDouble(
+                        "snow-effects.ice-details.pond-chance",
+                        0.005D
+                )
+        );
+    }
+
+    public double getSnowSmallIcePatchChance() {
+        return clampProbability(
+                this.config.getDouble(
+                        "snow-effects.ice-details.small-ice-patch-chance",
+                        0.02D
+                )
+        );
+    }
+
+    public int getSnowMaxPondRadius() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.ice-details.max-pond-radius",
+                        3
+                );
+
+        return Math.max(1, Math.min(8, v));
+    }
+
+    public int getSnowMaxIcePatchRadius() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.ice-details.max-ice-patch-radius",
+                        3
+                );
+
+        return Math.max(1, Math.min(8, v));
+    }
+
+    public boolean isSnowBlueIceEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.ice-details.use-blue-ice",
+                false
+        );
+    }
+
+    public boolean isSnowRocksEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.rocks.enabled",
+                true
+        );
+    }
+
+    public double getSnowRockChance() {
+        return clampProbability(
+                this.config.getDouble(
+                        "snow-effects.rocks.chance",
+                        0.025D
+                )
+        );
+    }
+
+    public int getSnowRockMaxSize() {
+        int v =
+                this.config.getInt(
+                        "snow-effects.rocks.max-size",
+                        4
+                );
+
+        return Math.max(1, Math.min(8, v));
+    }
+
+    public boolean isSnowTreesEnabled() {
+        return this.config.getBoolean(
+                "snow-effects.trees.enabled",
+                true
+        );
+    }
+
+    public double getSnowTreeChance() {
+        return clampProbability(
+                this.config.getDouble(
+                        "snow-effects.trees.chance",
+                        0.04D
+                )
+        );
     }
 
     public boolean isResetEnabled() {
@@ -210,7 +410,7 @@ public class ConfigManager {
                 true
         );
     }
-    
+
     public boolean isBlockJoinsDuringChunky() {
         return this.config.getBoolean(
                 "reset.block-joins-during-chunky",
@@ -289,6 +489,218 @@ public class ConfigManager {
         int v = this.config.getInt("reset.interval-days", 1);
 
         return Math.max(1, v);
+    }
+
+    public LocalDate getLastResetDate() {
+        String raw = this.config.getString(
+                "reset.last-reset-date",
+                ""
+        );
+
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(raw.trim());
+        } catch (Exception e) {
+            this.plugin.getLogger().warning(
+                    "Invalid reset.last-reset-date in config.yml: '"
+                            + raw
+                            + "'. Expected format: YYYY-MM-DD"
+            );
+
+            return null;
+        }
+    }
+
+    public void setLastResetDate(LocalDate date) {
+        String value =
+                date == null
+                        ? ""
+                        : date.toString();
+
+        this.config.set(
+                "reset.last-reset-date",
+                value
+        );
+
+        writeLastResetDateToConfigFile(value);
+
+        this.plugin.reloadConfig();
+        this.config = this.plugin.getConfig();
+    }
+
+    private void writeLastResetDateToConfigFile(String value) {
+        Path configPath =
+                this.plugin.getDataFolder()
+                        .toPath()
+                        .resolve("config.yml");
+
+        if (!Files.exists(configPath)) {
+            this.plugin.getLogger().warning(
+                    "Could not update reset.last-reset-date because config.yml does not exist yet. Falling back to saveConfig()."
+            );
+
+            this.plugin.saveConfig();
+            return;
+        }
+
+        List<String> lines;
+
+        try {
+            lines =
+                    Files.readAllLines(
+                            configPath,
+                            StandardCharsets.UTF_8
+                    );
+
+        } catch (IOException e) {
+            this.plugin.getLogger().warning(
+                    "Could not read config.yml to update reset.last-reset-date: "
+                            + e.getMessage()
+                            + ". Falling back to saveConfig()."
+            );
+
+            this.plugin.saveConfig();
+            return;
+        }
+
+        List<String> out =
+                new ArrayList<>();
+
+        boolean inResetSection =
+                false;
+
+        boolean wroteLastResetDate =
+                false;
+
+        for (String line : lines) {
+            String trimmed =
+                    line.trim();
+
+            if (isTopLevelYamlSection(line, trimmed)) {
+                inResetSection =
+                        trimmed.equals("reset:");
+            }
+
+            if (inResetSection
+                    && trimmed.startsWith("last-reset-date:")) {
+                out.add(
+                        rebuildLastResetDateLine(
+                                line,
+                                value
+                        )
+                );
+
+                wroteLastResetDate = true;
+                continue;
+            }
+
+            out.add(line);
+
+            if (inResetSection
+                    && !wroteLastResetDate
+                    && trimmed.startsWith("interval-days:")) {
+                out.add(
+                        "  last-reset-date: "
+                                + quoteYamlString(value)
+                                + "                    # YYYY-MM-DD | auto-written after full reset; empty = no full reset recorded yet"
+                );
+
+                wroteLastResetDate = true;
+            }
+        }
+
+        if (!wroteLastResetDate) {
+            this.plugin.getLogger().warning(
+                    "Could not find reset.last-reset-date or reset.interval-days in config.yml. Falling back to saveConfig()."
+            );
+
+            this.plugin.saveConfig();
+            return;
+        }
+
+        try {
+            Files.write(
+                    configPath,
+                    out,
+                    StandardCharsets.UTF_8
+            );
+
+        } catch (IOException e) {
+            this.plugin.getLogger().warning(
+                    "Could not write reset.last-reset-date to config.yml: "
+                            + e.getMessage()
+                            + ". Falling back to saveConfig()."
+            );
+
+            this.plugin.saveConfig();
+        }
+    }
+
+    private boolean isTopLevelYamlSection(
+            String line,
+            String trimmed
+    ) {
+        if (trimmed.isEmpty()) {
+            return false;
+        }
+
+        if (trimmed.startsWith("#")) {
+            return false;
+        }
+
+        if (line.startsWith(" ")
+                || line.startsWith("\t")) {
+            return false;
+        }
+
+        return trimmed.endsWith(":");
+    }
+
+    private String rebuildLastResetDateLine(
+            String originalLine,
+            String value
+    ) {
+        int keyIndex =
+                originalLine.indexOf("last-reset-date:");
+
+        String indent =
+                keyIndex > 0
+                        ? originalLine.substring(0, keyIndex)
+                        : "";
+
+        int commentIndex =
+                originalLine.indexOf('#');
+
+        String comment =
+                commentIndex >= 0
+                        ? originalLine.substring(commentIndex)
+                        : "";
+
+        if (comment.isBlank()) {
+            return indent
+                    + "last-reset-date: "
+                    + quoteYamlString(value);
+        }
+
+        return indent
+                + "last-reset-date: "
+                + quoteYamlString(value)
+                + "                    "
+                + comment;
+    }
+
+    private String quoteYamlString(String value) {
+        String safe =
+                value == null
+                        ? ""
+                        : value.replace("\"", "\\\"");
+
+        return "\""
+                + safe
+                + "\"";
     }
 
     public Difficulty getResetDifficulty() {

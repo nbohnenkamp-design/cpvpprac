@@ -6,6 +6,8 @@ import me.liass.cpvpsinglebiome.config.ConfigManager;
 import me.liass.cpvpsinglebiome.generator.BiomeType;
 
 import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.Snow;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.LimitedRegion;
 import org.bukkit.generator.WorldInfo;
@@ -28,6 +30,17 @@ public class CPVPSBBlockPopulator extends BlockPopulator {
             Material.RED_TERRACOTTA,
             Material.BROWN_TERRACOTTA,
             Material.WHITE_TERRACOTTA
+    };
+
+    /*
+     * Snow rocks are intentionally not too dark.
+     * They should work as small orientation details, not as dirty stone piles.
+     */
+    private static final Material[] SNOW_ROCK_MATERIALS = new Material[] {
+            Material.STONE,
+            Material.ANDESITE,
+            Material.CALCITE,
+            Material.PACKED_ICE
     };
 
     private final ConfigManager config;
@@ -276,46 +289,320 @@ public class CPVPSBBlockPopulator extends BlockPopulator {
             LimitedRegion region,
             double density
     ) {
+        populateSnowLayers(r, cx, cz, region, density);
+        populateSnowIceDetails(r, cx, cz, region);
+        populateSnowRocks(r, cx, cz, region);
+        populateSnowTrees(r, cx, cz, region, density);
+    }
+
+    private void populateSnowLayers(
+            Random r,
+            int cx,
+            int cz,
+            LimitedRegion region,
+            double density
+    ) {
+        if (!this.config.isSnowLayersEnabled()) {
+            return;
+        }
+
+        double chance =
+                clampProbability(
+                        this.config.getSnowLayerChance()
+                );
+
+        int attempts =
+                Math.max(
+                        4,
+                        featureCount(r, 16.0D * density)
+                );
+
+        for (int i = 0; i < attempts; i++) {
+            if (r.nextDouble() > chance) {
+                continue;
+            }
+
+            int x = (cx << 4) + r.nextInt(16);
+            int z = (cz << 4) + r.nextInt(16);
+
+            int groundY =
+                    findSnowGroundY(region, x, z);
+
+            if (groundY < 0) {
+                continue;
+            }
+
+            Material ground =
+                    region.getType(x, groundY, z);
+
+            if (!canPlaceSnowLayerOn(ground)) {
+                continue;
+            }
+
+            int targetY =
+                    groundY + 1;
+
+            if (!hasAir(region, x, targetY, z)) {
+                continue;
+            }
+
+            placeSnowLayer(
+                    region,
+                    r,
+                    x,
+                    targetY,
+                    z
+            );
+        }
+    }
+
+    private void populateSnowIceDetails(
+            Random r,
+            int cx,
+            int cz,
+            LimitedRegion region
+    ) {
+        if (!this.config.isSnowIceDetailsEnabled()) {
+            return;
+        }
+
+        /*
+         * Bigger frozen ponds:
+         * Radius is intentionally weighted toward the upper range.
+         * With max-pond-radius: 5 this produces mostly radius 3-5,
+         * not lots of tiny radius 1-2 ponds.
+         */
+        if (r.nextDouble()
+                < clampProbability(
+                        this.config.getSnowPondChance()
+                )) {
+            int x = (cx << 4) + 5 + r.nextInt(6);
+            int z = (cz << 4) + 5 + r.nextInt(6);
+
+            int groundY =
+                    findSnowGroundY(region, x, z);
+
+            if (groundY >= 0) {
+                int radius =
+                        chooseSnowPondRadius(r);
+
+                placeFrozenPond(
+                        region,
+                        r,
+                        x,
+                        groundY,
+                        z,
+                        radius
+                );
+            }
+        }
+
+        /*
+         * Small patches remain small by design.
+         * They are only minor accents, while ponds provide the larger ice areas.
+         */
+        if (r.nextDouble()
+                < clampProbability(
+                        this.config.getSnowSmallIcePatchChance()
+                )) {
+            int x = (cx << 4) + 4 + r.nextInt(8);
+            int z = (cz << 4) + 4 + r.nextInt(8);
+
+            int groundY =
+                    findSnowGroundY(region, x, z);
+
+            if (groundY >= 0) {
+                int radius =
+                        chooseSmallIcePatchRadius(r);
+
+                placeSmallIcePatch(
+                        region,
+                        r,
+                        x,
+                        groundY,
+                        z,
+                        radius
+                );
+            }
+        }
+    }
+
+    private int chooseSnowPondRadius(Random r) {
+        int maxRadius =
+                Math.max(
+                        1,
+                        this.config.getSnowMaxPondRadius()
+                );
+
+        maxRadius =
+                Math.min(
+                        maxRadius,
+                        5
+                );
+
+        if (maxRadius <= 2) {
+            return maxRadius;
+        }
+
+        int minRadius =
+                Math.max(
+                        3,
+                        maxRadius - 2
+                );
+
+        return minRadius
+                + r.nextInt(
+                        maxRadius - minRadius + 1
+                );
+    }
+
+    private int chooseSmallIcePatchRadius(Random r) {
+        int maxRadius =
+                Math.max(
+                        1,
+                        this.config.getSnowMaxIcePatchRadius()
+                );
+
+        maxRadius =
+                Math.min(
+                        maxRadius,
+                        3
+                );
+
+        if (maxRadius <= 1) {
+            return 1;
+        }
+
+        return 1 + r.nextInt(maxRadius);
+    }
+
+    private void populateSnowRocks(
+            Random r,
+            int cx,
+            int cz,
+            LimitedRegion region
+    ) {
+        if (!this.config.isSnowRocksEnabled()) {
+            return;
+        }
+
+        if (r.nextDouble()
+                > clampProbability(
+                        this.config.getSnowRockChance()
+                )) {
+            return;
+        }
+
+        int x = (cx << 4) + 4 + r.nextInt(8);
+        int z = (cz << 4) + 4 + r.nextInt(8);
+
+        int groundY =
+                findSnowGroundY(region, x, z);
+
+        if (groundY < 0) {
+            return;
+        }
+
+        Material ground =
+                region.getType(x, groundY, z);
+
+        if (!canDecorateSnowGround(ground)) {
+            return;
+        }
+
+        placeSmallSnowRock(
+                region,
+                r,
+                x,
+                groundY + 1,
+                z,
+                Math.max(
+                        1,
+                        this.config.getSnowRockMaxSize()
+                )
+        );
+    }
+
+    private void populateSnowTrees(
+            Random r,
+            int cx,
+            int cz,
+            LimitedRegion region,
+            double density
+    ) {
+        if (!this.config.isSnowTreesEnabled()) {
+            return;
+        }
+
         if (!this.config.isFeatureEnabled("small-trees")) {
             return;
         }
 
-        int trees = featureCount(
-                r,
-                density
-                        * this.config.getBiomeTreeDensity(
-                                this.biomeType.getId()
-                        )
-                        * 0.15D
-        );
+        /*
+         * snow-effects.trees.chance is intentionally used directly
+         * as chance per chunk.
+         *
+         * Do not multiply it with decoration density again.
+         * Otherwise values like 0.04 become almost invisible in practice.
+         */
+        double chance =
+                clampProbability(
+                        this.config.getSnowTreeChance()
+                );
 
-        for (int i = 0; i < trees; i++) {
-            int x = (cx << 4) + 5 + r.nextInt(6);
-            int z = (cz << 4) + 5 + r.nextInt(6);
-
-            int snowY = findTopSnowLayerY(region, x, z);
-
-            if (snowY < 0) {
-                continue;
-            }
-
-            int groundY = snowY - 1;
-            int baseY = snowY;
-
-            Material ground = region.getType(x, groundY, z);
-
-            if (ground != Material.GRASS_BLOCK
-                    && ground != Material.DIRT
-                    && ground != Material.SNOW_BLOCK) {
-                continue;
-            }
-
-            if (!canPlaceSpruce(region, x, baseY, z)) {
-                continue;
-            }
-
-            placeSnowSpruce(region, x, baseY, z);
+        if (r.nextDouble() > chance) {
+            return;
         }
+
+        int x = (cx << 4) + 5 + r.nextInt(6);
+        int z = (cz << 4) + 5 + r.nextInt(6);
+
+        int groundY =
+                findSnowGroundY(region, x, z);
+
+        if (groundY < 0) {
+            return;
+        }
+
+        Material ground =
+                region.getType(x, groundY, z);
+
+        if (ground != Material.GRASS_BLOCK
+                && ground != Material.DIRT
+                && ground != Material.SNOW_BLOCK) {
+            return;
+        }
+
+        int baseY =
+                groundY + 1;
+
+        int trunkHeight =
+                chooseSnowSpruceTrunkHeight(r);
+
+        if (!canPlaceSpruce(region, x, baseY, z, trunkHeight)) {
+            return;
+        }
+
+        placeSnowSpruce(region, x, baseY, z, trunkHeight);
+    }
+
+    private int chooseSnowSpruceTrunkHeight(Random r) {
+        int roll =
+                r.nextInt(100);
+
+        if (roll < 50) {
+            return 4;
+        }
+
+        if (roll < 82) {
+            return 5;
+        }
+
+        if (roll < 96) {
+            return 6;
+        }
+
+        return 7;
     }
 
     private void populateMushroom(
@@ -416,21 +703,343 @@ public class CPVPSBBlockPopulator extends BlockPopulator {
         }
     }
 
+    private void placeFrozenPond(
+            LimitedRegion region,
+            Random r,
+            int centerX,
+            int centerY,
+            int centerZ,
+            int radius
+    ) {
+        /*
+         * Frozen ponds are placed flat on centerY.
+         *
+         * Reason:
+         * A frozen pond should look like a frozen surface, not like stairs.
+         * We only accept nearby terrain with a height difference of 1 block.
+         * Steeper terrain is skipped so the pond naturally breaks at slopes.
+         */
+        int safeRadius =
+                Math.max(1, Math.min(radius, 5));
+
+        int iceY =
+                centerY;
+
+        for (int dx = -safeRadius; dx <= safeRadius; dx++) {
+            for (int dz = -safeRadius; dz <= safeRadius; dz++) {
+
+                double distance =
+                        Math.sqrt(
+                                (dx * dx)
+                                        + (dz * dz)
+                        );
+
+                if (distance > safeRadius + r.nextDouble() * 0.35D) {
+                    continue;
+                }
+
+                int x = centerX + dx;
+                int z = centerZ + dz;
+
+                tryPlaceFlatIceCell(
+                        region,
+                        x,
+                        iceY,
+                        z
+                );
+            }
+        }
+    }
+
+    private void placeSmallIcePatch(
+            LimitedRegion region,
+            Random r,
+            int centerX,
+            int centerY,
+            int centerZ,
+            int radius
+    ) {
+        /*
+         * Small ice patches are also kept flat.
+         * They are capped lower than ponds and should stay as minor accents.
+         */
+        int safeRadius =
+                Math.max(1, Math.min(radius, 3));
+
+        int iceY =
+                centerY;
+
+        for (int dx = -safeRadius; dx <= safeRadius; dx++) {
+            for (int dz = -safeRadius; dz <= safeRadius; dz++) {
+
+                if (Math.abs(dx) + Math.abs(dz)
+                        > safeRadius + r.nextInt(2)) {
+                    continue;
+                }
+
+                int x = centerX + dx;
+                int z = centerZ + dz;
+
+                tryPlaceFlatIceCell(
+                        region,
+                        x,
+                        iceY,
+                        z
+                );
+            }
+        }
+    }
+
+    private boolean tryPlaceFlatIceCell(
+            LimitedRegion region,
+            int x,
+            int iceY,
+            int z
+    ) {
+        int groundY =
+                findSnowGroundY(region, x, z);
+
+        if (groundY < 0) {
+            return false;
+        }
+
+        /*
+         * Allow only gentle terrain around the pond.
+         * This prevents ugly stepped ice while avoiding floating plates.
+         */
+        if (Math.abs(groundY - iceY) > 1) {
+            return false;
+        }
+
+        Material ground =
+                region.getType(x, groundY, z);
+
+        if (!canDecorateSnowGround(ground)) {
+            return false;
+        }
+
+        ensureIceSupport(
+                region,
+                x,
+                iceY,
+                z
+        );
+
+        clearIceSpaceAbove(
+                region,
+                x,
+                iceY,
+                z
+        );
+
+        region.setType(
+                x,
+                iceY,
+                z,
+                chooseSnowIceMaterial()
+        );
+
+        return true;
+    }
+
+    private void ensureIceSupport(
+            LimitedRegion region,
+            int x,
+            int iceY,
+            int z
+    ) {
+        Material below =
+                region.getType(x, iceY - 1, z);
+
+        if (isSolidBase(below)) {
+            return;
+        }
+
+        /*
+         * If the local terrain is one block lower, support the flat ice.
+         * Dirt is hidden below the ice and avoids floating pond edges.
+         */
+        if (below == Material.AIR
+                || below == Material.SNOW) {
+            region.setType(
+                    x,
+                    iceY - 1,
+                    z,
+                    Material.DIRT
+            );
+        }
+    }
+
+    private void clearIceSpaceAbove(
+            LimitedRegion region,
+            int x,
+            int iceY,
+            int z
+    ) {
+        /*
+         * Clear snow and minor terrain that would otherwise sit on top of
+         * a flat pond. Only two blocks are touched to avoid ugly cuts.
+         */
+        for (int y = iceY + 1; y <= iceY + 2; y++) {
+            Material current =
+                    region.getType(x, y, z);
+
+            if (current == Material.AIR) {
+                continue;
+            }
+
+            if (isIceSpaceClearable(current)) {
+                region.setType(
+                        x,
+                        y,
+                        z,
+                        Material.AIR
+                );
+            }
+        }
+    }
+
+    private boolean isIceSpaceClearable(Material material) {
+        return switch (material) {
+
+            case SNOW,
+                 SHORT_GRASS,
+                 TALL_GRASS,
+                 FERN,
+                 GRASS_BLOCK,
+                 DIRT,
+                 PODZOL,
+                 SNOW_BLOCK,
+                 STONE,
+                 ANDESITE,
+                 CALCITE -> true;
+
+            default -> false;
+        };
+    }
+
+    private Material chooseSnowIceMaterial() {
+        /*
+         * Use only PACKED_ICE for generated ice areas.
+         *
+         * Reason:
+         * - real ice look
+         * - slight slippery movement
+         * - no mixed blue tones
+         * - no dark BLUE_ICE spots
+         */
+        return Material.PACKED_ICE;
+    }
+
+    private void placeSmallSnowRock(
+            LimitedRegion region,
+            Random r,
+            int centerX,
+            int yBase,
+            int centerZ,
+            int maxSize
+    ) {
+        if (!hasSolidBelow(region, centerX, yBase, centerZ)) {
+            return;
+        }
+
+        int blocks =
+                1 + r.nextInt(
+                        Math.max(
+                                1,
+                                Math.min(maxSize, 5)
+                        )
+                );
+
+        for (int i = 0; i < blocks; i++) {
+            int dx = r.nextInt(3) - 1;
+            int dz = r.nextInt(3) - 1;
+            int dy = r.nextInt(3) == 0 ? 1 : 0;
+
+            int x = centerX + dx;
+            int y = yBase + dy;
+            int z = centerZ + dz;
+
+            if (!isReplaceableSnowDetail(region.getType(x, y, z))) {
+                continue;
+            }
+
+            if (!hasSolidBelow(region, x, y, z)) {
+                continue;
+            }
+
+            Material material =
+                    SNOW_ROCK_MATERIALS[
+                            r.nextInt(SNOW_ROCK_MATERIALS.length)
+                    ];
+
+            region.setType(
+                    x,
+                    y,
+                    z,
+                    material
+            );
+        }
+    }
+
+    private void placeSnowLayer(
+            LimitedRegion region,
+            Random r,
+            int x,
+            int y,
+            int z
+    ) {
+        int maxLayers =
+                Math.max(
+                        1,
+                        Math.min(
+                                8,
+                                this.config.getSnowMaxLayerHeight()
+                        )
+                );
+
+        int layers =
+                1 + r.nextInt(maxLayers);
+
+        BlockData data =
+                Material.SNOW.createBlockData();
+
+        if (data instanceof Snow snow) {
+            snow.setLayers(layers);
+            region.setBlockData(x, y, z, snow);
+            return;
+        }
+
+        region.setType(x, y, z, Material.SNOW);
+    }
+
     private void placeSnowSpruce(
             LimitedRegion r,
             int x,
             int yBase,
-            int z
+            int z,
+            int trunkHeight
     ) {
-        int trunkHeight = 7;
+        int safeTrunkHeight =
+                Math.max(
+                        4,
+                        Math.min(
+                                trunkHeight,
+                                7
+                        )
+                );
 
-        for (int i = 0; i < trunkHeight; i++) {
+        for (int i = 0; i < safeTrunkHeight; i++) {
             r.setType(x, yBase + i, z, Material.SPRUCE_LOG);
         }
 
-        int topY = yBase + trunkHeight - 1;
+        int topY =
+                yBase + safeTrunkHeight - 1;
 
-        placeLeafLayer(r, x, topY - 4, z, 3);
+        if (safeTrunkHeight >= 6) {
+            placeLeafLayer(r, x, topY - 4, z, 2);
+        }
+
         placeLeafLayer(r, x, topY - 3, z, 2);
         placeLeafLayer(r, x, topY - 2, z, 2);
         placeLeafLayer(r, x, topY - 1, z, 1);
@@ -444,7 +1053,10 @@ public class CPVPSBBlockPopulator extends BlockPopulator {
                 Material.SPRUCE_LEAVES
         );
 
-        placeSnowOnLeaves(r, x, topY - 2, z, 2);
+        if (safeTrunkHeight >= 6) {
+            placeSnowOnLeaves(r, x, topY - 2, z, 2);
+        }
+
         placeSnowOnLeaves(r, x, topY - 1, z, 1);
         placeSnowOnLeaves(r, x, topY, z, 1);
     }
@@ -698,11 +1310,24 @@ public class CPVPSBBlockPopulator extends BlockPopulator {
             LimitedRegion r,
             int x,
             int yBase,
-            int z
+            int z,
+            int trunkHeight
     ) {
-        for (int y = yBase; y <= yBase + 10; y++) {
-            for (int dx = -3; dx <= 3; dx++) {
-                for (int dz = -3; dz <= 3; dz++) {
+        int safeTrunkHeight =
+                Math.max(
+                        4,
+                        Math.min(
+                                trunkHeight,
+                                7
+                        )
+                );
+
+        int maxY =
+                yBase + safeTrunkHeight + 2;
+
+        for (int y = yBase; y <= maxY; y++) {
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dz = -2; dz <= 2; dz++) {
 
                     Material m = r.getType(x + dx, y, z + dz);
 
@@ -831,25 +1456,26 @@ public class CPVPSBBlockPopulator extends BlockPopulator {
         return -1;
     }
 
-    private int findTopSnowLayerY(
+    private int findSnowGroundY(
             LimitedRegion r,
             int x,
             int z
     ) {
-        int baseHeight = this.config.getBaseHeight();
-        int variation =
-                (int) Math.ceil(this.config.getHeightVariation());
+        int y =
+                findTopBlockY(r, x, z);
 
-        int startY = baseHeight + variation + 12;
-        int endY = baseHeight - variation - 8;
-
-        for (int y = startY; y >= endY; y--) {
-            if (r.getType(x, y, z) == Material.SNOW) {
-                return y;
-            }
+        if (y < 0) {
+            return -1;
         }
 
-        return -1;
+        Material top =
+                r.getType(x, y, z);
+
+        if (top == Material.SNOW) {
+            return y - 1;
+        }
+
+        return y;
     }
 
     private boolean isValidTerrainSurface(Material m) {
@@ -871,11 +1497,51 @@ public class CPVPSBBlockPopulator extends BlockPopulator {
                  SNOW,
                  SNOW_BLOCK,
                  STONE,
+                 ANDESITE,
+                 CALCITE,
                  DEEPSLATE,
-                 END_STONE -> true;
+                 END_STONE,
+                 ICE,
+                 PACKED_ICE,
+                 BLUE_ICE -> true;
 
             default -> false;
         };
+    }
+
+    private boolean canPlaceSnowLayerOn(Material m) {
+        return switch (m) {
+
+            case GRASS_BLOCK,
+                 DIRT,
+                 PODZOL,
+                 SNOW_BLOCK,
+                 STONE,
+                 ANDESITE,
+                 CALCITE -> true;
+
+            default -> false;
+        };
+    }
+
+    private boolean canDecorateSnowGround(Material m) {
+        return switch (m) {
+
+            case GRASS_BLOCK,
+                 DIRT,
+                 PODZOL,
+                 SNOW_BLOCK,
+                 STONE,
+                 ANDESITE,
+                 CALCITE -> true;
+
+            default -> false;
+        };
+    }
+
+    private boolean isReplaceableSnowDetail(Material m) {
+        return m == Material.AIR
+                || m == Material.SNOW;
     }
 
     private boolean hasAir(
@@ -909,11 +1575,28 @@ public class CPVPSBBlockPopulator extends BlockPopulator {
                  MYCELIUM,
                  SNOW_BLOCK,
                  STONE,
+                 ANDESITE,
+                 CALCITE,
                  DEEPSLATE,
-                 END_STONE -> true;
+                 END_STONE,
+                 ICE,
+                 PACKED_ICE,
+                 BLUE_ICE -> true;
 
             default -> false;
         };
+    }
+
+    private double clampProbability(double value) {
+        if (value < 0.0D) {
+            return 0.0D;
+        }
+
+        if (value > 1.0D) {
+            return 1.0D;
+        }
+
+        return value;
     }
 
     private int featureCount(

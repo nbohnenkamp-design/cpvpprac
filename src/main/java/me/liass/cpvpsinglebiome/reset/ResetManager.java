@@ -39,7 +39,7 @@ public class ResetManager {
     private int schedulerTaskId = -1;
     private int chunkyWatchdogTaskId = -1;
 
-    private LocalDate lastAutoResetDate = null;
+    private LocalDate lastResetDate = null;
     private LocalDateTime nextResetAt = null;
 
     private final Set<Integer> sentWarnings = new HashSet<>();
@@ -65,6 +65,7 @@ public class ResetManager {
         stop();
 
         this.sentWarnings.clear();
+        this.lastResetDate = config.getLastResetDate();
 
         if (!config.isResetEnabled()) {
             plugin.getLogger().info(
@@ -86,8 +87,14 @@ public class ResetManager {
                 );
 
         plugin.getLogger().info(
-                "Automatic arena reset enabled. Next reset: "
-                        + nextResetAt
+                "Automatic arena reset enabled. Last full reset: "
+                        + (
+                        this.lastResetDate != null
+                                ? this.lastResetDate
+                                : "not recorded"
+                )
+                        + ". Next reset: "
+                        + this.nextResetAt
                         + " ("
                         + config.getResetZone()
                         + ")"
@@ -146,7 +153,7 @@ public class ResetManager {
     }
 
     public LocalDate getLastAutoResetDate() {
-        return this.lastAutoResetDate;
+        return this.lastResetDate;
     }
 
     public LocalDateTime getNextResetAt() {
@@ -187,11 +194,6 @@ public class ResetManager {
             resetAll(
                     Bukkit.getConsoleSender()
             );
-
-            this.lastAutoResetDate =
-                    now.toLocalDate();
-
-            calculateNextReset();
         }
     }
 
@@ -286,16 +288,40 @@ public class ResetManager {
         LocalDateTime now =
                 LocalDateTime.now(zone);
 
-        LocalDateTime candidate =
-                now.toLocalDate().atTime(
-                        config.getResetTime()
-                );
+        LocalDate lastDate =
+                this.lastResetDate;
 
-        if (!candidate.isAfter(now)) {
+        LocalDateTime candidate;
+
+        if (lastDate != null) {
             candidate =
-                    candidate.plusDays(
-                            config.getResetIntervalDays()
+                    lastDate
+                            .plusDays(
+                                    config.getResetIntervalDays()
+                            )
+                            .atTime(
+                                    config.getResetTime()
+                            );
+
+            while (!candidate.isAfter(now)) {
+                candidate =
+                        candidate.plusDays(
+                                config.getResetIntervalDays()
+                        );
+            }
+
+        } else {
+            candidate =
+                    now.toLocalDate().atTime(
+                            config.getResetTime()
                     );
+
+            if (!candidate.isAfter(now)) {
+                candidate =
+                        candidate.plusDays(
+                                config.getResetIntervalDays()
+                        );
+            }
         }
 
         this.nextResetAt =
@@ -325,6 +351,8 @@ public class ResetManager {
         }
 
         beginMaintenance();
+
+        markFullResetDate();
 
         sender.sendMessage(
                 config.getPrefix()
@@ -460,6 +488,29 @@ public class ResetManager {
                     "Join guard enabled: normal players are blocked during arena reset phase."
             );
         }
+    }
+
+    private void markFullResetDate() {
+        LocalDate date =
+                LocalDate.now(
+                        config.getResetZone()
+                );
+
+        this.lastResetDate =
+                date;
+
+        config.setLastResetDate(
+                date
+        );
+
+        calculateNextReset();
+
+        plugin.getLogger().info(
+                "Stored last full reset date: "
+                        + date
+                        + ". Next reset: "
+                        + this.nextResetAt
+        );
     }
 
     private void onWorldResetPhaseComplete(
