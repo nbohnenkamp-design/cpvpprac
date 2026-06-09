@@ -75,10 +75,19 @@ decoration:
 # Snow biome atmosphere
 # -----------------------------------------------------------------------------
 # Designed for open Crystal PvP:
-# light snow ambience, thin snow layers, small ice accents,
-# rare frozen ponds, sparse rock details and very few trees.
+# light snow ambience, thin snow layers, larger but controlled packed-ice areas,
+# sparse rock details and very few small/medium spruce trees.
 #
-# No powder snow, no ice-spike fields, no dense structures.
+# No powder snow.
+# No ice-spike fields.
+# No dense structures.
+# No mixed blue-ice color noise.
+#
+# Generated ice areas use PACKED_ICE only:
+# - looks like real frozen ice
+# - slightly slippery
+# - visually calmer than mixed ICE / PACKED_ICE / BLUE_ICE
+# - no dark blue-ice spots
 
 snow-effects:
 
@@ -95,21 +104,20 @@ snow-effects:
     max-snow-layer-height: 1             # 1 = thin snow only, good for PvP readability
 
   ice-details:
-    enabled: true                        # small ice accents and rare frozen ponds
-    pond-chance: 0.005                   # very rare frozen ponds
-    small-ice-patch-chance: 0.02         # small local ice accents
-    max-pond-radius: 3                   # keep ponds small, no large slippery zones
-    max-ice-patch-radius: 3              # small patches only
-    use-blue-ice: false                  # false = no fast blue-ice movement
+    enabled: true                        # small packed-ice accents and rare frozen ponds
+    pond-chance: 0.01                    # rare frozen ponds, but visible enough
+    small-ice-patch-chance: 0.04         # small local packed-ice areas
+    max-pond-radius: 5                   # larger frozen ponds, still controlled for PvP
+    max-ice-patch-radius: 4              # larger patches, but no huge skating fields
 
   rocks:
     enabled: true                        # small stone/ice orientation details
-    chance: 0.025                        # sparse rocks
-    max-size: 4                          # small details only, no big structures
+    chance: 0.01                         # sparse rocks
+    max-size: 2                          # small details only, no big structures
 
   trees:
-    enabled: true                        # allow rare small snow trees
-    chance: 0.04                         # very sparse, no forests
+    enabled: true                        # allow rare small/medium snow spruce trees
+    chance: 0.05                         # chance per chunk; rare, but actually visible
 
 # -----------------------------------------------------------------------------
 # World settings
