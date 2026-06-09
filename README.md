@@ -209,6 +209,12 @@ A Crystal PvP practice server focused on open arena worlds and PvP readability.
 
 ---
 
+## Disclaimer
+
+This project is not affiliated with Mojang, Microsoft, Minecraft or PaperMC.
+Minecraft is a trademark of Microsoft.
+
+---
 ## License
 
 GPL-3.0-only
