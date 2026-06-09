@@ -755,18 +755,30 @@ public class ResetManager {
 
         evacuatePlayers(worldName);
 
-        Bukkit.dispatchCommand(
-                Bukkit.getConsoleSender(),
-                "mv remove " + worldName
-        );
-
         World world =
                 Bukkit.getWorld(worldName);
 
         if (world != null) {
+            plugin.getLogger().info(
+                    "Removing loaded world from Multiverse: "
+                            + worldName
+            );
+
+            Bukkit.dispatchCommand(
+                    Bukkit.getConsoleSender(),
+                    "mv remove " + worldName
+            );
+
             Bukkit.unloadWorld(
                     world,
                     false
+            );
+
+        } else {
+            plugin.getLogger().info(
+                    "Skipping Multiverse remove for '"
+                            + worldName
+                            + "' because the world is not loaded."
             );
         }
 
