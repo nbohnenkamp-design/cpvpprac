@@ -105,10 +105,10 @@ snow-effects:
 
   ice-details:
     enabled: true                        # small packed-ice accents and rare frozen ponds
-    pond-chance: 0.01                    # rare frozen ponds, but visible enough
-    small-ice-patch-chance: 0.04         # small local packed-ice areas
+    pond-chance: 0.02                    # rare frozen ponds, but visible enough
+    small-ice-patch-chance: 0.005         # small local packed-ice areas
     max-pond-radius: 5                   # larger frozen ponds, still controlled for PvP
-    max-ice-patch-radius: 4              # larger patches, but no huge skating fields
+    max-ice-patch-radius: 3              # larger patches, but no huge skating fields
 
   rocks:
     enabled: true                        # small stone/ice orientation details
@@ -143,7 +143,7 @@ reset:
 
   timezone: "Europe/Berlin"              # Germany, includes summer/winter time
 
-  interval-days: 7                       # 1 daily | 7 weekly | 30 monthly-ish
+  interval-days: 5                       # 1 daily | 7 weekly | 30 monthly-ish
 
   last-reset-date: "2026-06-06"          # YYYY-MM-DD | auto-written after full reset; empty = no full reset recorded yet
 
