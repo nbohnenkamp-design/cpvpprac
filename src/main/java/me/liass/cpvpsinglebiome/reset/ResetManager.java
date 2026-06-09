@@ -46,6 +46,7 @@ public class ResetManager {
 
     private static final int MAX_WORLD_LOAD_WAIT_SECONDS = 90;
     private static final int MAX_WORLD_SETTINGS_WAIT_SECONDS = 90;
+    private static final int MAX_WORLD_FOLDER_DELETE_WAIT_SECONDS = 60;
 
     private final Queue<String> chunkyQueue = new ArrayDeque<>();
     private final Map<String, Integer> chunkyWorldLoadRetries = new HashMap<>();
@@ -392,17 +393,16 @@ public class ResetManager {
         resetWorldInternal(
                 spec.worldName(),
                 spec.biomeName(),
-                sender
-        );
-
-        Bukkit.getScheduler().runTaskLater(
-                plugin,
-                () -> resetNext(
-                        sender,
-                        worlds,
-                        index + 1
-                ),
-                20L * 5L
+                sender,
+                success -> Bukkit.getScheduler().runTaskLater(
+                        plugin,
+                        () -> resetNext(
+                                sender,
+                                worlds,
+                                index + 1
+                        ),
+                        20L * 2L
+                )
         );
     }
 
@@ -425,12 +425,11 @@ public class ResetManager {
                 resetWorldInternal(
                         spec.worldName(),
                         spec.biomeName(),
-                        sender
-                );
-
-                onWorldResetPhaseComplete(
                         sender,
-                        List.of(spec)
+                        success -> onWorldResetPhaseComplete(
+                                sender,
+                                List.of(spec)
+                        )
                 );
                 return;
             }
@@ -459,15 +458,14 @@ public class ResetManager {
         resetWorldInternal(
                 worldName,
                 biomeName,
-                Bukkit.getConsoleSender()
-        );
-
-        onWorldResetPhaseComplete(
                 Bukkit.getConsoleSender(),
-                List.of(
-                        new ResetWorldSpec(
-                                worldName,
-                                biomeName
+                success -> onWorldResetPhaseComplete(
+                        Bukkit.getConsoleSender(),
+                        List.of(
+                                new ResetWorldSpec(
+                                        worldName,
+                                        biomeName
+                                )
                         )
                 )
         );
@@ -724,13 +722,15 @@ public class ResetManager {
     private void resetWorldInternal(
             String worldName,
             String biomeName,
-            CommandSender sender
+            CommandSender sender,
+            Consumer<Boolean> completion
     ) {
         if (worldName == null || worldName.isBlank()) {
             sender.sendMessage(
                     config.getPrefix()
                             + "Invalid world name."
             );
+            completion.accept(false);
             return;
         }
 
@@ -740,6 +740,7 @@ public class ResetManager {
                             + "Refusing to reset main world: "
                             + worldName
             );
+            completion.accept(false);
             return;
         }
 
@@ -754,6 +755,11 @@ public class ResetManager {
 
         evacuatePlayers(worldName);
 
+        Bukkit.dispatchCommand(
+                Bukkit.getConsoleSender(),
+                "mv remove " + worldName
+        );
+
         World world =
                 Bukkit.getWorld(worldName);
 
@@ -764,25 +770,94 @@ public class ResetManager {
             );
         }
 
-        Path worldPath =
+        Bukkit.getScheduler().runTaskLater(
+                plugin,
+                () -> prepareWorldFolderAndCreate(
+                        worldName,
+                        biomeName,
+                        sender,
+                        0,
+                        completion
+                ),
+                20L
+        );
+    }
+
+    private void prepareWorldFolderAndCreate(
+            String worldName,
+            String biomeName,
+            CommandSender sender,
+            int attempt,
+            Consumer<Boolean> completion
+    ) {
+        World loadedWorld =
+                Bukkit.getWorld(worldName);
+
+        if (loadedWorld != null) {
+            Bukkit.unloadWorld(
+                    loadedWorld,
+                    false
+            );
+
+            if (attempt >= MAX_WORLD_FOLDER_DELETE_WAIT_SECONDS) {
+                sender.sendMessage(
+                        config.getPrefix()
+                                + "Could not unload world before reset: "
+                                + worldName
+                );
+                completion.accept(false);
+                return;
+            }
+
+            Bukkit.getScheduler().runTaskLater(
+                    plugin,
+                    () -> prepareWorldFolderAndCreate(
+                            worldName,
+                            biomeName,
+                            sender,
+                            attempt + 1,
+                            completion
+                    ),
+                    20L
+            );
+            return;
+        }
+
+        Path serverRoot =
                 Bukkit.getWorldContainer()
-                        .toPath()
+                        .toPath();
+
+        Path legacyWorldPath =
+                serverRoot.resolve(worldName);
+
+        Path dimensionWorldPath =
+                serverRoot
+                        .resolve("world")
+                        .resolve("dimensions")
+                        .resolve("minecraft")
                         .resolve(worldName);
 
-        if (Files.exists(worldPath)) {
-            try {
+        try {
+            if (Files.exists(dimensionWorldPath)) {
+                plugin.getLogger().info(
+                        "Deleting Paper dimension world folder before reset: "
+                                + dimensionWorldPath.toAbsolutePath()
+                );
+
+                deleteDirectory(dimensionWorldPath);
+            }
+
+            if (Files.exists(legacyWorldPath)) {
                 if (config.isBackupOldWorlds()) {
                     Path backupPath =
-                            Bukkit.getWorldContainer()
-                                    .toPath()
-                                    .resolve(
-                                            worldName
-                                                    + "_old_"
-                                                    + System.currentTimeMillis()
-                                    );
+                            serverRoot.resolve(
+                                    worldName
+                                            + "_old_"
+                                            + System.currentTimeMillis()
+                            );
 
                     Files.move(
-                            worldPath,
+                            legacyWorldPath,
                             backupPath
                     );
 
@@ -794,23 +869,68 @@ public class ResetManager {
 
                 } else {
                     deleteDirectory(
-                            worldPath
+                            legacyWorldPath
                     );
                 }
+            }
 
-            } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
+            if (attempt >= MAX_WORLD_FOLDER_DELETE_WAIT_SECONDS) {
                 sender.sendMessage(
                         config.getPrefix()
-                                + "Could not delete or backup world folder: "
+                                + "Could not delete old world data after waiting "
+                                + MAX_WORLD_FOLDER_DELETE_WAIT_SECONDS
+                                + "s: "
                                 + e.getMessage()
                 );
+                completion.accept(false);
                 return;
             }
+
+            Bukkit.getScheduler().runTaskLater(
+                    plugin,
+                    () -> prepareWorldFolderAndCreate(
+                            worldName,
+                            biomeName,
+                            sender,
+                            attempt + 1,
+                            completion
+                    ),
+                    20L
+            );
+            return;
         }
 
-        Bukkit.dispatchCommand(
-                Bukkit.getConsoleSender(),
-                "mv remove " + worldName
+        if (Files.exists(legacyWorldPath) || Files.exists(dimensionWorldPath)) {
+            if (attempt >= MAX_WORLD_FOLDER_DELETE_WAIT_SECONDS) {
+                sender.sendMessage(
+                        config.getPrefix()
+                                + "World folder still exists after reset preparation: "
+                                + worldName
+                );
+                completion.accept(false);
+                return;
+            }
+
+            Bukkit.getScheduler().runTaskLater(
+                    plugin,
+                    () -> prepareWorldFolderAndCreate(
+                            worldName,
+                            biomeName,
+                            sender,
+                            attempt + 1,
+                            completion
+                    ),
+                    20L
+            );
+            return;
+        }
+
+        plugin.getLogger().info(
+                "World folder prepared. Creating reset world '"
+                        + worldName
+                        + "' with generator CPVPSingleBiome:"
+                        + biomeName
         );
 
         Bukkit.dispatchCommand(
@@ -821,21 +941,28 @@ public class ResetManager {
                         + biomeName
         );
 
-        ensureWorldSettingsApplied(
-                worldName,
-                0
+        Bukkit.getScheduler().runTaskLater(
+                plugin,
+                () -> ensureWorldSettingsApplied(
+                        worldName,
+                        0,
+                        completion
+                ),
+                20L
         );
     }
 
     private void ensureWorldSettingsApplied(
             String worldName,
-            int attempt
+            int attempt,
+            Consumer<Boolean> completion
     ) {
         World world =
                 Bukkit.getWorld(worldName);
 
         if (world != null) {
             applyConfiguredWorldSettings(world);
+            completion.accept(true);
             return;
         }
 
@@ -844,6 +971,7 @@ public class ResetManager {
                     "Could not apply world settings after reset. World is still not loaded: "
                             + worldName
             );
+            completion.accept(false);
             return;
         }
 
@@ -863,7 +991,8 @@ public class ResetManager {
                 plugin,
                 () -> ensureWorldSettingsApplied(
                         worldName,
-                        attempt + 1
+                        attempt + 1,
+                        completion
                 ),
                 20L
         );
