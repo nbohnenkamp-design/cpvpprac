@@ -19,6 +19,32 @@ Newer Paper/Minecraft versions are not officially supported until tested.
 
 ---
 
+## Requirements
+
+### Required
+
+* Paper 1.21.11
+
+### Optional integrations
+
+| Plugin          |            Required | Purpose                                     |
+| --------------- | ------------------: | ------------------------------------------- |
+| Multiverse-Core | No, but recommended | World creation and arena management         |
+| Chunky          | No, but recommended | Pregeneration after world creation or reset |
+
+The core generator can create single-biome terrain without Chunky.
+
+However, the intended production workflow uses:
+
+* **Multiverse-Core** for creating, loading and managing arena worlds
+* **Chunky** for pregenerating worlds after creation or reset
+
+If **Multiverse-Core** is not installed, Multiverse-based world creation commands and workflows are not available.
+
+If **Chunky** is not installed, Chunky-related commands and automatic pregeneration are not available.
+
+---
+
 ## Features
 
 * Custom single-biome worlds:
@@ -51,21 +77,6 @@ Newer Paper/Minecraft versions are not officially supported until tested.
   * sparse rocks
   * rare varied spruce trees
 * Large mushroom structures for mushroom worlds
-
----
-
-## Requirements
-
-### Required
-
-* Paper 1.21.11
-
-### Recommended for full functionality
-
-* Multiverse-Core
-* Chunky
-
-The plugin can generate worlds through Bukkit/Paper directly, but the intended production workflow uses Multiverse-Core and Chunky.
 
 ---
 
@@ -103,6 +114,8 @@ The plugin can generate worlds through Bukkit/Paper directly, but the intended p
 /cpvpsb chunky start-all
 ```
 
+Chunky commands require Chunky to be installed.
+
 ---
 
 ## Multiverse usage
@@ -117,6 +130,8 @@ Create single-biome worlds with:
 /mv create mushroom normal -g CPVPSingleBiome:mushroom
 /mv create end normal -g CPVPSingleBiome:end
 ```
+
+These commands require Multiverse-Core.
 
 ---
 
