@@ -186,6 +186,7 @@ reset:
     - { world: "badlands", biome: "badlands" }
     - { world: "snow",     biome: "snow" }
     - { world: "mushroom", biome: "mushroom" }
+    - { world: "end",      biome: "end" }
 
 # -----------------------------------------------------------------------------
 # Chunky integration
