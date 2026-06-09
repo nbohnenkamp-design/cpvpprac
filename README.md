@@ -1,82 +1,151 @@
-# CPVPSingleBiome v1.2.10 Stable
+# CPVPSingleBiome v1.2.11
 
-Crystal PvP focused single-biome terrain generator for **Paper 1.21.11**.
+A PvP-focused world generation and arena management plugin for Paper servers.
 
-Originally developed for **cpvpprac.eu**, a Crystal PvP practice server.
-Demo / live server: **cpvpprac.eu**
+CPVPSingleBiome creates clean, competitive worlds designed for Crystal PvP, Practice PvP, KitPvP, FFA arenas and events. Unlike traditional survival generators, it focuses on fair combat terrain, automated world resets, fast world deployment and long-term server maintenance.
+
+Originally developed and actively used on **cpvpprac.eu**, a Crystal PvP practice server.
+
+---
+
+## Designed For
+
+* Crystal PvP
+* Practice PvP
+* KitPvP
+* FFA Arenas
+* Event Worlds
+* Tournament Servers
 
 ---
 
 ## Compatibility
 
-| Plugin Version | Server Software | Minecraft Version | Status               |
-| -------------- | --------------- | ----------------- | -------------------- |
-| 1.2.10         | Paper           | 1.21.11           | Stable / tested      |
-| 1.3.x          | Paper           | newer versions    | Planned / not tested |
+### Tested
 
-This plugin is currently built and tested for **Paper 1.21.11**.
-Newer Paper/Minecraft versions are not officially supported until tested.
+| Plugin Version | Server Software | Status |
+| -------------- | --------------- | ------ |
+| 1.2.11         | Paper 1.21.11   | Tested |
+| 1.2.11         | Paper 26.1.2    | Tested |
+
+### Requirements
+
+* Java 21+
+* Paper Server
+
+### Optional Integrations
+
+| Plugin          | Purpose                       |
+| --------------- | ----------------------------- |
+| Multiverse-Core | World creation and management |
+| Chunky          | Pregeneration support         |
+
+Other Paper versions may work but are not officially tested.
 
 ---
 
-## Requirements
+## Available Biomes
 
-### Required
+* Plains
+* Desert
+* Badlands
+* Snow
+* Mushroom
+* End
 
-* Paper 1.21.11
-
-### Optional integrations
-
-| Plugin          |            Required | Purpose                                     |
-| --------------- | ------------------: | ------------------------------------------- |
-| Multiverse-Core | No, but recommended | World creation and arena management         |
-| Chunky          | No, but recommended | Pregeneration after world creation or reset |
-
-The core generator can create single-biome terrain without Chunky.
-
-However, the intended production workflow uses:
-
-* **Multiverse-Core** for creating, loading and managing arena worlds
-* **Chunky** for pregenerating worlds after creation or reset
-
-If **Multiverse-Core** is not installed, Multiverse-based world creation commands and workflows are not available.
-
-If **Chunky** is not installed, Chunky-related commands and automatic pregeneration are not available.
+Each biome is designed around PvP readability while maintaining a unique atmosphere.
 
 ---
 
 ## Features
 
-* Custom single-biome worlds:
+### PvP-Focused Terrain
 
-  * Plains
-  * Desert
-  * Badlands
-  * Snow
-  * Mushroom
-  * End
-* Open Crystal-PvP focused terrain generation
-* PvP-friendly terrain readability with reduced clutter
-* Configurable terrain height, noise, flatness and decoration density
-* Biome-specific decoration configuration
-* Sparse cinematic decoration system
-* Automatic arena reset system
-* Reset worlds automatically re-apply:
+Designed specifically for competitive gameplay.
 
-  * HARD difficulty
-  * SURVIVAL gamemode
-  * PvP enabled
-  * configured world border
-* Chunky pregeneration integration
-* Multiverse-Core support
-* Snow biome atmosphere:
+* Open terrain
+* Clean sightlines
+* Reduced clutter
+* Gentle elevation changes
+* Fair combat environments
+* Consistent terrain generation
 
-  * light snowflake particles
-  * thin snow layers
-  * flat packed-ice ponds
-  * sparse rocks
-  * rare varied spruce trees
-* Large mushroom structures for mushroom worlds
+Perfect for:
+
+* Crystal PvP
+* Practice PvP
+* Duels
+* FFA Worlds
+* Event Arenas
+
+---
+
+### Automated Arena Resets
+
+Keep combat worlds fresh automatically.
+
+Features include:
+
+* Scheduled resets
+* Manual resets
+* Automatic world recreation
+* Automatic world configuration
+* WorldBorder restoration
+* Player protection during resets
+* Compatibility with modern Paper world storage
+
+Reset worlds automatically restore:
+
+* HARD difficulty
+* SURVIVAL gamemode
+* PvP enabled
+* configured WorldBorder
+
+---
+
+### Chunky Integration
+
+Direct integration with Chunky.
+
+* Automatic pregeneration support
+* Multi-world support
+* Reduced lag spikes after creation
+* Faster deployment of new worlds
+
+---
+
+### World Management
+
+Manage biome worlds directly from in-game commands.
+
+Examples:
+
+* Create biome worlds
+* Teleport between worlds
+* View world information
+* Start Chunky pregeneration
+* Reset worlds
+* Monitor reset status
+
+---
+
+### Highly Configurable
+
+Customize nearly every aspect of world generation.
+
+Available settings include:
+
+* Terrain height
+* Hill intensity
+* Flatness
+* Noise scale
+* Decoration density
+* World border size
+* Reset schedules
+* Chunky settings
+* Biome-specific overrides
+
+Server owners can create anything from almost completely flat PvP maps to more natural-looking practice worlds.
 
 ---
 
@@ -91,14 +160,14 @@ If **Chunky** is not installed, Chunky-related commands and automatic pregenerat
 /cpvpsb info
 ```
 
-### World management
+### World Management
 
 ```text
 /cpvpsb create <world> [biome]
 /cpvpsb tp <world>
 ```
 
-### Reset system
+### Reset System
 
 ```text
 /cpvpsb reset now
@@ -107,115 +176,62 @@ If **Chunky** is not installed, Chunky-related commands and automatic pregenerat
 /cpvpsb reset reload
 ```
 
-### Chunky integration
+### Chunky Integration
 
 ```text
 /cpvpsb chunky start <world>
 /cpvpsb chunky start-all
 ```
 
-Chunky commands require Chunky to be installed.
+---
+
+## Snow Biome Features
+
+The Snow biome includes additional atmosphere features:
+
+* Light snowflake particles
+* Thin snow layers
+* Flat packed-ice ponds
+* Sparse rock formations
+* Rare spruce trees
+* PvP-friendly visibility
 
 ---
 
-## Multiverse usage
+## Why This Plugin Exists
 
-Create single-biome worlds with:
+Most world generators focus on exploration and survival gameplay.
 
-```text
-/mv create plains normal -g CPVPSingleBiome:plains
-/mv create desert normal -g CPVPSingleBiome:desert
-/mv create badlands normal -g CPVPSingleBiome:badlands
-/mv create snow normal -g CPVPSingleBiome:snow
-/mv create mushroom normal -g CPVPSingleBiome:mushroom
-/mv create end normal -g CPVPSingleBiome:end
-```
+CPVPSingleBiome was created for Crystal PvP communities that require worlds which are visually interesting while remaining fair, performant and enjoyable for competitive combat.
 
-These commands require Multiverse-Core.
+The plugin was originally developed for **cpvpprac.eu** and has been tested in real PvP environments before being released as open source.
 
 ---
 
-## Available biome generators
+## Production Usage
 
-```text
-plains
-desert
-badlands
-snow
-mushroom
-end
-```
-
-If no biome is specified, the plugin uses the configured `default-biome`.
-
----
-
-## Configuration highlights
-
-The plugin supports configuration for:
-
-* default biome
-* terrain height
-* terrain variation
-* noise scale
-* flatness
-* world border size
-* decoration density
-* biome-specific decoration overrides
-* automatic reset interval
-* reset time and timezone
-* last full reset date
-* Chunky pregeneration radius
-* Snow biome atmosphere
-
-Snow-specific options include:
-
-* snowflake particles
-* thin snow layers
-* packed-ice ponds
-* sparse rock details
-* rare spruce trees
-
----
-
-## Important notes
-
-Existing chunks from older generator versions may cause terrain walls or visible chunk borders.
-
-For best results after major terrain-generator changes, create fresh worlds or reset the affected arena world.
-
-Chunky pregeneration is strongly recommended for production servers.
-
-Arena worlds are designed for open Crystal PvP gameplay with reduced terrain clutter.
-The goal is not vanilla realism, but readable PvP terrain with enough visual identity to keep worlds recognizable.
-
-Since v1.2.6, reset worlds are forced back to HARD difficulty, SURVIVAL gamemode and PvP enabled after recreation. This prevents worlds from falling back to EASY after `/cpvpsb reset <world>`.
-
-Since v1.2.8, the last full reset date is stored in the config so scheduled resets survive server restarts correctly.
-
-Since v1.2.10, the Snow biome includes improved atmosphere, flatter packed-ice ponds and reduced visual clutter.
-
----
-
-## Server
-
-This plugin was originally developed for:
+CPVPSingleBiome is actively used on:
 
 ```text
 cpvpprac.eu
 ```
 
-A Crystal PvP practice server focused on open arena worlds and PvP readability.
+A Crystal PvP practice server focused on open combat arenas and competitive gameplay.
+
+---
+
+## Open Source
+
+CPVPSingleBiome is released under the GPL-3.0-only license.
+
+Source code is available on GitHub.
 
 ---
 
 ## Disclaimer
 
 This project is not affiliated with Mojang, Microsoft, Minecraft or PaperMC.
+
 Minecraft is a trademark of Microsoft.
 
----
-## License
-
-GPL-3.0-only
 
