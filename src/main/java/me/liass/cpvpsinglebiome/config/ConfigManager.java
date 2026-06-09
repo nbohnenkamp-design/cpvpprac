@@ -575,46 +575,61 @@ public class ConfigManager {
         boolean wroteLastResetDate =
                 false;
 
+        boolean insertedAfterIntervalDays =
+                false;
+
         for (String line : lines) {
             String trimmed =
                     line.trim();
 
             if (isTopLevelYamlSection(line, trimmed)) {
+                if (inResetSection && !wroteLastResetDate && !insertedAfterIntervalDays) {
+                    out.add(
+                            "  last-reset-date: "
+                                    + quoteYamlString(value)
+                                    + "                    # YYYY-MM-DD | auto-written after full reset; empty = no full reset recorded yet"
+                    );
+
+                    insertedAfterIntervalDays = true;
+                    wroteLastResetDate = true;
+                }
+
                 inResetSection =
                         trimmed.equals("reset:");
             }
 
             if (inResetSection
                     && trimmed.startsWith("last-reset-date:")) {
-                out.add(
-                        rebuildLastResetDateLine(
-                                line,
-                                value
-                        )
-                );
+                if (!wroteLastResetDate) {
+                    out.add(
+                            rebuildLastResetDateLine(
+                                    line,
+                                    value
+                            )
+                    );
 
-                wroteLastResetDate = true;
+                    wroteLastResetDate = true;
+                }
+
                 continue;
             }
 
             out.add(line);
+        }
 
-            if (inResetSection
-                    && !wroteLastResetDate
-                    && trimmed.startsWith("interval-days:")) {
-                out.add(
-                        "  last-reset-date: "
-                                + quoteYamlString(value)
-                                + "                    # YYYY-MM-DD | auto-written after full reset; empty = no full reset recorded yet"
-                );
+        if (inResetSection && !wroteLastResetDate && !insertedAfterIntervalDays) {
+            out.add(
+                    "  last-reset-date: "
+                            + quoteYamlString(value)
+                            + "                    # YYYY-MM-DD | auto-written after full reset; empty = no full reset recorded yet"
+            );
 
-                wroteLastResetDate = true;
-            }
+            wroteLastResetDate = true;
         }
 
         if (!wroteLastResetDate) {
             this.plugin.getLogger().warning(
-                    "Could not find reset.last-reset-date or reset.interval-days in config.yml. Falling back to saveConfig()."
+                    "Could not find reset section in config.yml. Falling back to saveConfig()."
             );
 
             this.plugin.saveConfig();
