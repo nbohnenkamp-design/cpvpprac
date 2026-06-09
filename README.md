@@ -1,4 +1,4 @@
-# CPVPSingleBiome v1.2.11
+# CPVPSingleBiome v1.2.12
 
 A PvP-focused world generation and arena management plugin for Paper servers.
 
