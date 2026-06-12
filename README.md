@@ -1,4 +1,4 @@
-# CPVPSingleBiome v1.2.12
+# CPVPSingleBiome v1.2.13
 
 A PvP-focused world generation and arena management plugin for Paper servers.
 
@@ -25,10 +25,10 @@ Originally developed and actively used on **cpvpprac.eu**, a Crystal PvP practic
 
 | Plugin Version | Server Software | Status |
 | -------------- | --------------- | ------ |
-| 1.2.12         | Paper 1.21.11   | Tested |
-| 1.2.12         | Paper 26.1.2    | Tested |
-| 1.2.12         | Purpur 1.21.11  | Tested |
-| 1.2.12         | Purpur 26.1.2   | Tested |
+| 1.2.13         | Paper 1.21.11   | Tested |
+| 1.2.13         | Paper 26.1.2    | Tested |
+| 1.2.13         | Purpur 1.21.11  | Tested |
+| 1.2.13         | Purpur 26.1.2   | Tested |
 
 ### Requirements
 
