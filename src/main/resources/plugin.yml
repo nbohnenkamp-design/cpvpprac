@@ -13,7 +13,7 @@ softdepend: [ Multiverse-Core, Chunky ]
 commands:
   cpvpsb:
     description: Main command for CPVPSingleBiome
-    usage: /<command> <help|reload|biomes|info|create|tp|reset|chunky>
+    usage: /<command> <help|version|about|status|export|reload|biomes|info|create|tp|reset|chunky>
     aliases: [ singlebiome, cpvpsinglebiome ]
 
 permissions:
@@ -21,6 +21,10 @@ permissions:
     description: Access to all CPVPSingleBiome admin commands
     default: op
     children:
+      cpvpsinglebiome.version: true
+      cpvpsinglebiome.about: true
+      cpvpsinglebiome.status: true
+      cpvpsinglebiome.export: true
       cpvpsinglebiome.reload: true
       cpvpsinglebiome.create: true
       cpvpsinglebiome.tp: true
@@ -29,6 +33,22 @@ permissions:
       cpvpsinglebiome.reset.now: true
       cpvpsinglebiome.chunky: true
       cpvpsinglebiome.maintenance.bypass: true
+
+  cpvpsinglebiome.version:
+    description: Allows use of /cpvpsb version
+    default: true
+
+  cpvpsinglebiome.about:
+    description: Allows use of /cpvpsb about
+    default: true
+
+  cpvpsinglebiome.status:
+    description: Allows use of /cpvpsb status
+    default: op
+
+  cpvpsinglebiome.export:
+    description: Allows use of /cpvpsb export
+    default: op
 
   cpvpsinglebiome.reload:
     description: Allows use of /cpvpsb reload
