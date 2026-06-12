@@ -2,7 +2,7 @@
 
 All notable changes to CPVPSingleBiome are documented here.
 
-## [1.2.13] - Unreleased
+## [1.2.13] - 2026-06-12
 
 ### Added
 
