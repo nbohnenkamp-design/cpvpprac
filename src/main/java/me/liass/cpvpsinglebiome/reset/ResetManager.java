@@ -22,11 +22,15 @@ import java.util.function.Consumer;
 import me.liass.cpvpsinglebiome.CPVPSingleBiomePlugin;
 import me.liass.cpvpsinglebiome.chunky.ChunkyIntegration;
 import me.liass.cpvpsinglebiome.config.ConfigManager;
+import me.liass.cpvpsinglebiome.generator.BiomeType;
+import me.liass.cpvpsinglebiome.generator.SingleBiomeChunkGenerator;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.generator.ChunkGenerator;
 
 public class ResetManager {
 
@@ -758,15 +762,28 @@ public class ResetManager {
         World world =
                 Bukkit.getWorld(worldName);
 
-        if (world != null) {
+        if (isMultiverseAvailable()) {
             plugin.getLogger().info(
-                    "Removing loaded world from Multiverse: "
+                    "Removing world from Multiverse registry before reset: "
                             + worldName
             );
 
             Bukkit.dispatchCommand(
                     Bukkit.getConsoleSender(),
                     "mv remove " + worldName
+            );
+
+        } else {
+            plugin.getLogger().info(
+                    "Multiverse-Core is not available. Reset will use Bukkit/Paper world creation for: "
+                            + worldName
+            );
+        }
+
+        if (world != null) {
+            plugin.getLogger().info(
+                    "Unloading loaded world before reset: "
+                            + worldName
             );
 
             Bukkit.unloadWorld(
@@ -776,9 +793,8 @@ public class ResetManager {
 
         } else {
             plugin.getLogger().info(
-                    "Skipping Multiverse remove for '"
+                    "World is not currently loaded before reset: "
                             + worldName
-                            + "' because the world is not loaded."
             );
         }
 
@@ -945,18 +961,16 @@ public class ResetManager {
                         + biomeName
         );
 
-        Bukkit.dispatchCommand(
-                Bukkit.getConsoleSender(),
-                "mv create "
-                        + worldName
-                        + " normal -g CPVPSingleBiome:"
-                        + biomeName
+        createResetWorld(
+                worldName,
+                biomeName
         );
 
         Bukkit.getScheduler().runTaskLater(
                 plugin,
                 () -> ensureWorldSettingsApplied(
                         worldName,
+                        biomeName,
                         0,
                         completion
                 ),
@@ -964,8 +978,118 @@ public class ResetManager {
         );
     }
 
+    private void createResetWorld(
+            String worldName,
+            String biomeName
+    ) {
+        if (isMultiverseAvailable()) {
+            plugin.getLogger().info(
+                    "Creating reset world via Multiverse: "
+                            + worldName
+                            + " with generator CPVPSingleBiome:"
+                            + biomeName
+            );
+
+            Bukkit.dispatchCommand(
+                    Bukkit.getConsoleSender(),
+                    "mv create "
+                            + worldName
+                            + " normal -g CPVPSingleBiome:"
+                            + biomeName
+            );
+
+            return;
+        }
+
+        createResetWorldWithBukkit(
+                worldName,
+                biomeName
+        );
+    }
+
+    private void createResetWorldWithBukkit(
+            String worldName,
+            String biomeName
+    ) {
+        BiomeType biomeType =
+                BiomeType.fromString(
+                        biomeName
+                );
+
+        if (biomeType == null) {
+            plugin.getLogger().severe(
+                    "Cannot create reset world '"
+                            + worldName
+                            + "': unknown biome '"
+                            + biomeName
+                            + "'."
+            );
+            return;
+        }
+
+        plugin.getLogger().info(
+                "Creating reset world via Bukkit/Paper WorldCreator: "
+                        + worldName
+                        + " with biome "
+                        + biomeType.getId()
+        );
+
+        try {
+            WorldCreator creator =
+                    new WorldCreator(
+                            worldName
+                    );
+
+            creator.generator(
+                    (ChunkGenerator) new SingleBiomeChunkGenerator(
+                            config,
+                            biomeType
+                    )
+            );
+
+            creator.generateStructures(false);
+
+            World createdWorld =
+                    creator.createWorld();
+
+            if (createdWorld == null) {
+                plugin.getLogger().warning(
+                        "Bukkit/Paper WorldCreator returned null for reset world: "
+                                + worldName
+                );
+                return;
+            }
+
+            plugin.getLogger().info(
+                    "Bukkit/Paper WorldCreator loaded reset world: "
+                            + createdWorld.getName()
+            );
+
+        } catch (Throwable t) {
+            plugin.getLogger().severe(
+                    "Bukkit/Paper WorldCreator failed for reset world '"
+                            + worldName
+                            + "': "
+                            + t.getClass().getSimpleName()
+                            + " - "
+                            + t.getMessage()
+            );
+        }
+    }
+
+    private boolean isMultiverseAvailable() {
+        org.bukkit.plugin.Plugin multiverse =
+                Bukkit.getPluginManager().getPlugin(
+                        "Multiverse-Core"
+                );
+
+        return multiverse != null
+                && multiverse.isEnabled();
+    }
+
     private void ensureWorldSettingsApplied(
             String worldName,
+            String biomeName,
             int attempt,
             Consumer<Boolean> completion
     ) {
@@ -987,6 +1111,30 @@ public class ResetManager {
             return;
         }
 
+        if (attempt == 5 && isMultiverseAvailable()) {
+            plugin.getLogger().info(
+                    "World is still not loaded after Multiverse create. Trying Multiverse load: "
+                            + worldName
+            );
+
+            Bukkit.dispatchCommand(
+                    Bukkit.getConsoleSender(),
+                    "mv load " + worldName
+            );
+        }
+
+        if (attempt == 15) {
+            plugin.getLogger().warning(
+                    "World is still not loaded after reset create command. Trying Bukkit/Paper fallback load: "
+                            + worldName
+            );
+
+            createResetWorldWithBukkit(
+                    worldName,
+                    biomeName
+            );
+        }
+
         if (attempt == 0 || attempt % 5 == 0) {
             plugin.getLogger().info(
                     "Waiting to apply world settings after reset: "
@@ -1003,6 +1151,7 @@ public class ResetManager {
                 plugin,
                 () -> ensureWorldSettingsApplied(
                         worldName,
+                        biomeName,
                         attempt + 1,
                         completion
                 ),
