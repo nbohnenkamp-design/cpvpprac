@@ -79,6 +79,26 @@ public class ResetManager {
             return;
         }
 
+        if (this.lastResetDate == null) {
+            LocalDate today =
+                    LocalDate.now(
+                            config.getResetZone()
+                    );
+
+            this.lastResetDate =
+                    today;
+
+            config.setLastResetDate(
+                    today
+            );
+
+            plugin.getLogger().info(
+                    "Automatic arena reset initialized. Stored scheduler start date: "
+                            + today
+                            + ". No reset will run immediately after first enable."
+            );
+        }
+
         registerChunkyCompletionHook();
 
         calculateNextReset();

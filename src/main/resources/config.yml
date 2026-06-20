@@ -135,9 +135,15 @@ world-border-size: 10000                 # 0 = disabled | 10000 = X/Z -5000 to +
 # It is auto-written after /cpvpsb reset now or after a scheduled full reset.
 # Single-world resets like /cpvpsb reset snow do not change last-reset-date.
 
+# Automatic scheduled resets are disabled by default for safety.
+# Set enabled to true only after you have configured the worlds below.
+# When enabled is set to true for the first time and last-reset-date is empty,
+# the plugin stores the current date as the scheduler start date and does not
+# run an immediate reset.
+
 reset:
 
-  enabled: true                          # true = automatic scheduler active
+  enabled: false                         # false = safe default; set true to enable automatic scheduler
 
   time: "05:00"                          # HH:mm format
 
@@ -145,7 +151,7 @@ reset:
 
   interval-days: 5                       # 1 daily | 7 weekly | 30 monthly-ish
 
-  last-reset-date: "2026-06-06"          # YYYY-MM-DD | auto-written after full reset; empty = no full reset recorded yet
+  last-reset-date: ""                    # YYYY-MM-DD | internal scheduler date; leave empty on fresh installs
 
   world-settings:
     difficulty: HARD                     # PEACEFUL / EASY / NORMAL / HARD
@@ -194,7 +200,7 @@ reset:
 
 chunky:
 
-  enabled: true                          # automatically run after reset
+  enabled: false                         # false = safe default; set true to run automatically after reset
 
   radius: 5000                           # pregeneration radius
 
