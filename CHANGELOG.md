@@ -2,6 +2,16 @@
 
 All notable changes to CPVPSingleBiome are documented here.
 
+## [1.2.15] - 2026-06-20
+
+### Fixed
+
+- Disabled automatic scheduled resets by default in the shipped configuration.
+- Disabled automatic Chunky pregeneration by default in the shipped configuration.
+- Removed the hardcoded shipped `last-reset-date` runtime value from the default configuration.
+- Added safe initialization for empty or invalid `last-reset-date` values when automatic resets are enabled for the first time.
+- Prevented automatic resets from running immediately after a fresh installation or first enable.
+
 ## [1.2.14] - 2026-06-19
 
 ### Fixed
