@@ -23,12 +23,12 @@ Originally developed and actively used on **cpvpprac.eu**, a Crystal PvP practic
 
 ### Tested
 
-| Plugin Version | Server Software | Status |
-| -------------- | --------------- | ------ |
-| 1.2.15        | Paper 1.21.11   | Tested |
-| 1.2.15        | Paper 26.1.2    | Tested |
-| 1.2.15        | Purpur 1.21.11  | Tested |
-| 1.2.15        | Purpur 26.1.2   | Tested |
+| Server Software | Status |
+| --------------- | ------ |
+| Paper 1.21.11   | Tested |
+| Paper 26.1.2    | Tested |
+| Purpur 1.21.11  | Tested |
+| Purpur 26.1.2   | Tested |
 
 ### Requirements
 
