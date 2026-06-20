@@ -2,6 +2,16 @@
 
 All notable changes to CPVPSingleBiome are documented here.
 
+## [1.2.16] - 2026-06-20
+
+### Changed
+
+- Made the shipped reset timezone configuration neutral by default.
+- Changed the default reset timezone to use the server/JVM timezone when left empty.
+- Improved configuration comments to better explain behavior, safe ranges and PvP-friendly values.
+- Replaced server-specific default maintenance command examples with neutral example commands.
+- Changed the shipped fallback world example from `newspawn` to the standard `world`.
+
 ## [1.2.15] - 2026-06-20
 
 ### Fixed

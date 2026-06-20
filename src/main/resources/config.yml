@@ -2,7 +2,7 @@
 # Supported biomes:
 # desert, plains, badlands, snow, mushroom, end
 
-default-biome: plains                    # used if no biome is specified
+default-biome: plains                    # used when /cpvpsb create is called without a biome argument
 
 # -----------------------------------------------------------------------------
 # Terrain generation
@@ -10,36 +10,36 @@ default-biome: plains                    # used if no biome is specified
 
 base-height: 70                          # average terrain height
 
-height-variation: 10                     # 0 = flat | 10 = recommended | 16 = strong hills
+height-variation: 10                     # terrain height variation; lower = flatter, higher = stronger hills
 
-noise-scale: 80.0                        # 40 = bumpy | 80 = smooth | 160 = huge swells
+noise-scale: 80.0                        # terrain noise scale; lower = more frequent bumps, higher = wider terrain waves
 
-flatness: 0.35                           # 0.0 = full hills | 0.35 = recommended | 1.0 = flat
+flatness: 0.35                           # terrain smoothing; 0.0 = full hills, 1.0 = very flat
 
 # -----------------------------------------------------------------------------
 # Decorations
 # -----------------------------------------------------------------------------
-# Sparse cinematic decoration designed for Crystal PvP readability.
+# Decoration defaults are kept sparse to preserve PvP readability and open sightlines.
 
 decoration:
 
-  enabled: true                          # master switch
+  enabled: true                          # master switch for terrain decorations
 
-  density: 0.15                          # 0.10 sparse | 0.15 recommended | 0.30 busy
+  density: 0.15                          # global decoration density; lower = cleaner PvP terrain, higher = more visual detail
 
-  tree-density: 0.4                      # 0.0 none | 0.4 PvP style | 1.0 dense
+  tree-density: 0.4                      # global tree density; lower = open sightlines, higher = more trees
 
-  small-trees: true                      # PLAINS bushes / SNOW spruce trees
+  small-trees: true                      # enables small biome-specific trees or bushes where supported
 
-  flowers: true                          # PLAINS grass + flowers
+  flowers: true                          # enables small plains-style grass and flower details
 
-  rocks: true                            # DESERT rocks / BADLANDS formations / END bumps
+  rocks: true                            # enables small biome-specific rock and terrain details
 
-  dead-bushes: true                      # DESERT + BADLANDS
+  dead-bushes: true                      # enables dry decoration details in desert-style biomes
 
-  cactus: true                           # DESERT cactus generation
+  cactus: true                           # enables cactus generation in desert-style terrain
 
-  mushrooms: true                        # MUSHROOM small + large mushrooms
+  mushrooms: true                        # enables small and large mushroom decoration in mushroom terrain
 
   # ---------------------------------------------------------------------------
   # Biome-specific overrides
@@ -48,33 +48,33 @@ decoration:
   biomes:
 
     plains:
-      density: 0.12                      # very clean PvP terrain
-      tree-density: 0.20
+      density: 0.12                      # biome decoration density; PvP-friendly range: 0.05-0.20, higher = more clutter
+      tree-density: 0.20                 # biome tree density; lower = more open sightlines, higher = more trees
 
     desert:
-      density: 0.08                      # mostly open
-      tree-density: 0.0
+      density: 0.08                      # biome decoration density; low values keep desert terrain open
+      tree-density: 0.0                  # biome tree density; 0.0 = no trees
 
     badlands:
-      density: 0.18                      # more dramatic formations
-      tree-density: 0.0
+      density: 0.18                      # biome decoration density; higher values add more formations/details
+      tree-density: 0.0                  # biome tree density; 0.0 = no trees
 
     snow:
-      density: 0.14                      # open snowy biome
-      tree-density: 0.35
+      density: 0.14                      # biome decoration density; lower values keep snowy terrain readable
+      tree-density: 0.35                 # biome tree density; lower values keep snow worlds more open
 
     mushroom:
-      density: 0.22                      # mystical / atmospheric
-      tree-density: 0.0
+      density: 0.22                      # biome decoration density; higher values add more mushroom details
+      tree-density: 0.0                  # biome tree density; 0.0 = no trees
 
     end:
-      density: 0.04                      # almost empty
-      tree-density: 0.0
+      density: 0.04                      # biome decoration density; very low values keep End-style terrain open
+      tree-density: 0.0                  # biome tree density; 0.0 = no trees
 
 # -----------------------------------------------------------------------------
 # Snow biome atmosphere
 # -----------------------------------------------------------------------------
-# Designed for open Crystal PvP:
+# Snow settings are designed to keep the biome readable for PvP while adding atmosphere:
 # light snow ambience, thin snow layers, larger but controlled packed-ice areas,
 # sparse rock details and very few small/medium spruce trees.
 #
@@ -92,32 +92,32 @@ decoration:
 snow-effects:
 
   snowflake-particles:
-    enabled: true                        # true = light ambient snow particles in snow worlds
+    enabled: true                        # enables light ambient snow particles in snow worlds
     interval-ticks: 20                   # 20 ticks = once per second
-    particles-per-player: 5              # low value to avoid visual spam
+    particles-per-player: 5              # particles per player; lower = cleaner view, higher = stronger ambience
     radius: 10                           # horizontal particle spread around players
     height: 4                            # vertical particle spread above players
 
   terrain:
-    snow-layers: true                    # place thin snow layers on suitable ground
-    snow-layer-chance: 0.55              # 0.0 none | 0.55 light/medium | 1.0 everywhere
-    max-snow-layer-height: 1             # 1 = thin snow only, good for PvP readability
+    snow-layers: true                    # enables thin snow layers on suitable ground
+    snow-layer-chance: 0.55              # snow layer chance; 0.0 = none, 1.0 = many surfaces covered
+    max-snow-layer-height: 1             # maximum snow layer height; 1 keeps terrain easiest to read
 
   ice-details:
-    enabled: true                        # small packed-ice accents and rare frozen ponds
-    pond-chance: 0.02                    # rare frozen ponds, but visible enough
-    small-ice-patch-chance: 0.005         # small local packed-ice areas
-    max-pond-radius: 5                   # larger frozen ponds, still controlled for PvP
-    max-ice-patch-radius: 3              # larger patches, but no huge skating fields
+    enabled: true                        # enables small packed-ice accents and rare frozen ponds
+    pond-chance: 0.02                    # frozen pond chance; higher = more ponds
+    small-ice-patch-chance: 0.005         # small packed-ice patch chance; higher = more local ice details
+    max-pond-radius: 5                   # maximum frozen pond radius; higher = larger ice areas
+    max-ice-patch-radius: 3              # maximum small ice patch radius
 
   rocks:
-    enabled: true                        # small stone/ice orientation details
-    chance: 0.01                         # sparse rocks
-    max-size: 2                          # small details only, no big structures
+    enabled: true                        # enables small stone or ice rock details
+    chance: 0.01                         # rock chance; lower = cleaner terrain, higher = more details
+    max-size: 2                          # maximum rock size; lower values keep terrain less obstructed
 
   trees:
-    enabled: true                        # allow rare small/medium snow spruce trees
-    chance: 0.05                         # chance per chunk; rare, but actually visible
+    enabled: true                        # enables rare small or medium snow spruce trees
+    chance: 0.05                         # tree chance per chunk; lower = more open sightlines
 
 # -----------------------------------------------------------------------------
 # World settings
@@ -143,28 +143,28 @@ world-border-size: 10000                 # 0 = disabled | 10000 = X/Z -5000 to +
 
 reset:
 
-  enabled: false                         # false = safe default; set true to enable automatic scheduler
+  enabled: false                         # false = safe default; set true to enable scheduled automatic resets
 
-  time: "05:00"                          # HH:mm format
+  time: "05:00"                          # scheduled reset time in HH:mm format, interpreted in reset.timezone
 
-  timezone: "Europe/Berlin"              # Germany, includes summer/winter time
+  timezone: ""                           # empty = use server/JVM timezone; set Europe/Berlin for German time incl. automatic summer/winter time; examples: UTC, America/New_York, Asia/Tokyo
 
-  interval-days: 5                       # 1 daily | 7 weekly | 30 monthly-ish
+  interval-days: 5                       # days between scheduled full resets; 1 = daily, 7 = weekly
 
-  last-reset-date: ""                    # YYYY-MM-DD | internal scheduler date; leave empty on fresh installs
+  last-reset-date: ""                    # internal scheduler date in YYYY-MM-DD format; leave empty on fresh installs
 
   world-settings:
     difficulty: HARD                     # PEACEFUL / EASY / NORMAL / HARD
     gamemode: SURVIVAL                   # SURVIVAL / CREATIVE / ADVENTURE / SPECTATOR
     pvp: true                            # true = PvP enabled after reset
 
-  fallback-world: "newspawn"             # players are teleported here before reset
+  fallback-world: "world"                # must be an existing safe world; players are moved there before reset
 
-  skip-if-any-player-online: true        # postpone automatic reset while normal players are online
+  skip-if-any-player-online: true        # true = postpone automatic reset while normal players are online
 
-  retry-after-minutes: 10                # check again after this many minutes if reset was postponed
+  retry-after-minutes: 10                # minutes before checking again if an automatic reset was postponed
 
-  block-joins-during-reset: true         # block normal players during world delete/create phase
+  block-joins-during-reset: true         # true = block normal players during world delete/create phase
 
   block-joins-during-chunky: false       # false = normal players may join while Chunky is running
 
@@ -172,20 +172,22 @@ reset:
 
   maintenance-kick-message: "§c[CPVPSingleBiome] §fArenas are resetting. Please reconnect shortly."
 
-  warning-enabled: true                  # broadcast countdown warnings if reset is allowed to run with players online
+  warning-enabled: true                  # true = broadcast countdown warnings before an automatic reset
 
-  warning-minutes: [10, 5, 1]            # countdown warnings before reset
+  warning-minutes: [10, 5, 1]            # minutes before reset when warnings are sent
 
-  backup-old-worlds: false               # false = delete old world folders directly
+  backup-old-worlds: false               # true = move old world folders to backup instead of deleting directly
 
   delete-old-worlds-after-success: true  # only relevant if backup-old-worlds is true
 
-  maintenance-during-reset: false        # run external maintenance commands during reset
+  maintenance-during-reset: false        # true = run configured console commands before and after reset
 
-  maintenance-command-on: "main on"      # console command before reset
+  maintenance-command-on: "say Arena reset maintenance started"   # console command before reset, only used if maintenance-during-reset is true
 
-  maintenance-command-off: "main off"    # console command after reset
+  maintenance-command-off: "say Arena reset maintenance finished" # console command after reset, only used if maintenance-during-reset is true
 
+  # world = world name, biome = CPVPSingleBiome biome type.
+  # These entries are examples; keep them in sync with the worlds you actually create.
   worlds:
     - { world: "plains",   biome: "plains" }
     - { world: "desert",   biome: "desert" }
@@ -200,17 +202,17 @@ reset:
 
 chunky:
 
-  enabled: false                         # false = safe default; set true to run automatically after reset
+  enabled: false                         # false = safe default; set true to run Chunky automatically after resets
 
-  radius: 5000                           # pregeneration radius
+  radius: 5000                           # pregeneration radius in blocks
 
-  shape: "circle"                        # circle / square
+  shape: "circle"                        # pregeneration shape: circle or square
 
-  center-spawn: true                     # true = world spawn | false = 0/0
+  center-spawn: true                     # true = center on world spawn, false = center on 0/0
 
-  silent: false                          # suppress Chunky progress chat
+  silent: false                          # true = suppress Chunky progress chat where supported
 
-  delay-after-world-create-seconds: 10   # wait after world creation
+  delay-after-world-create-seconds: 10   # seconds to wait after world creation before starting Chunky
 
 # -----------------------------------------------------------------------------
 # Messages
