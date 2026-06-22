@@ -133,20 +133,6 @@ snow-effects:
     enabled: true                        # enables rare small or medium snow spruce trees
     chance: 0.05                         # tree chance per chunk; lower = more open sightlines
 
-# -----------------------------------------------------------------------------
-# Automatic world reset
-# -----------------------------------------------------------------------------
-# Only listed worlds are touched.
-# last-reset-date is used to calculate the next automatic full reset.
-# It is auto-written after /cpvpsb reset now or after a scheduled full reset.
-# Single-world resets like /cpvpsb reset snow do not change last-reset-date.
-
-# Automatic scheduled resets are disabled by default for safety.
-# Set enabled to true only after you have configured the worlds below.
-# When enabled is set to true for the first time and last-reset-date is empty,
-# the plugin stores the current date as the scheduler start date and does not
-# run an immediate reset.
-
 reset:
 
   enabled: false                         # false = safe default; set true to enable scheduled automatic resets
