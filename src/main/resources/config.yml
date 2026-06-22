@@ -1,3 +1,17 @@
+# -----------------------------------------------------------------------------
+# Automatic world reset
+# -----------------------------------------------------------------------------
+# Only listed worlds are touched.
+# last-reset-date is used to calculate the next automatic full reset.
+# It is auto-written after /cpvpsb reset now or after a scheduled full reset.
+# Single-world resets like /cpvpsb reset snow do not change last-reset-date.
+#
+# Automatic scheduled resets are disabled by default for safety.
+# Set enabled to true only after you have configured the worlds below.
+# When enabled is set to true for the first time and last-reset-date is empty,
+# the plugin stores the current date as the scheduler start date and does not
+# run an immediate reset.
+
 # CPVPSingleBiome Configuration
 # Supported biomes:
 # desert, plains, badlands, snow, mushroom, end
@@ -125,7 +139,6 @@ snow-effects:
 # Minecraft worldborder size is a diameter, not a radius.
 # 10000 means roughly X/Z -5000 to +5000 around the border center.
 
-world-border-size: 10000                 # 0 = disabled | 10000 = X/Z -5000 to +5000
 
 # -----------------------------------------------------------------------------
 # Automatic world reset
@@ -160,9 +173,9 @@ reset:
 
   fallback-world: "world"                # must be an existing safe world; players are moved there before reset
 
-  skip-if-any-player-online: true        # true = postpone automatic reset while normal players are online
+  skip-if-any-player-online: false       # false = scheduled reset may run even if players are online
 
-  retry-after-minutes: 10                # minutes before checking again if an automatic reset was postponed
+  retry-after-minutes: 10                # minutes before checking again after a postponed scheduled reset
 
   block-joins-during-reset: true         # true = block normal players during world delete/create phase
 
@@ -172,7 +185,7 @@ reset:
 
   maintenance-kick-message: "§c[CPVPSingleBiome] §fArenas are resetting. Please reconnect shortly."
 
-  warning-enabled: true                  # true = broadcast countdown warnings before an automatic reset
+  warning-enabled: true                  # true = broadcast countdown warnings before a scheduled reset
 
   warning-minutes: [10, 5, 1]            # minutes before reset when warnings are sent
 
@@ -199,12 +212,13 @@ reset:
 # -----------------------------------------------------------------------------
 # Chunky integration
 # -----------------------------------------------------------------------------
+world-border-size: 2000                # 0 = disabled | should be 2x chunky.radius
 
 chunky:
 
   enabled: false                         # false = safe default; set true to run Chunky automatically after resets
 
-  radius: 5000                           # pregeneration radius in blocks
+  radius: 1000                           # pregeneration radius in blocks
 
   shape: "circle"                        # pregeneration shape: circle or square
 

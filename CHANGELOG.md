@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.17] - 2026-06-22
+
+### Changed
+
+- Reduced the default Chunky pregeneration radius from `5000` to `1000` blocks.
+- Changed the default world border size to `2000` so it matches the safer default pregeneration radius.
+- Moved `world-border-size` directly above the Chunky configuration in the default config.
+- Changed `skip-if-any-player-online` to `false` by default so scheduled reset warnings match the actual reset behavior.
+- Improved reset, warning and world border configuration comments.
+- Kept automatic scheduled resets and automatic Chunky pregeneration disabled by default for safety.
+
+### Notes
+
+- No update checker was added.
+- Existing servers keep their current `config.yml` unless they regenerate it or manually copy the new defaults.
+
+
 All notable changes to CPVPSingleBiome are documented here.
 
 ## [1.2.16] - 2026-06-20
