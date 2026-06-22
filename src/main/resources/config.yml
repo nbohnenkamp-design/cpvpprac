@@ -134,13 +134,6 @@ snow-effects:
     chance: 0.05                         # tree chance per chunk; lower = more open sightlines
 
 # -----------------------------------------------------------------------------
-# World settings
-# -----------------------------------------------------------------------------
-# Minecraft worldborder size is a diameter, not a radius.
-# 10000 means roughly X/Z -5000 to +5000 around the border center.
-
-
-# -----------------------------------------------------------------------------
 # Automatic world reset
 # -----------------------------------------------------------------------------
 # Only listed worlds are touched.

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.18] - 2026-06-22
+
+### Fixed
+
+- Removed duplicated automatic reset guide comments from the default configuration.
+- Removed outdated world border explanation comments from their old location.
+
+### Notes
+
+- No functional changes.
+- No terrain generation changes.
+- Existing servers do not need to update unless they want the cleaned default config.
+
+
 ## [1.2.17] - 2026-06-22
 
 ### Changed
