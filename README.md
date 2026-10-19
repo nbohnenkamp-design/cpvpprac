@@ -1,9 +1,10 @@
 # CPVPSingleBiome
 
-A PvP-focused world generation and arena management plugin for Paper servers.
+A PvP-focused world generation and arena management plugin for Paper and Purpur servers.
 
 CPVPSingleBiome creates clean, competitive worlds designed for Crystal PvP, Practice PvP, KitPvP, FFA arenas and events. Unlike traditional survival generators, it focuses on fair combat terrain, automated world resets, fast world deployment and long-term server maintenance.
 
+> **Recommended plugins:** [Multiverse-Core](https://modrinth.com/plugin/multiverse-core) for multi-world management and [Chunky](https://modrinth.com/plugin/chunky) for world pregeneration. Both are optional. CPVPSingleBiome also works standalone.
 
 ---
 
@@ -20,28 +21,21 @@ CPVPSingleBiome creates clean, competitive worlds designed for Crystal PvP, Prac
 
 ## Compatibility
 
-### Tested
-
-| Server Software | Status |
-| --------------- | ------ |
-| Paper 1.21.11   | Tested |
-| Paper 26.1.2    | Tested |
-| Purpur 1.21.11  | Tested |
-| Purpur 26.1.2   | Tested |
-
 ### Requirements
 
-* Java 21+
-* Paper Server
+* Paper or Purpur server
+* Java runtime compatible with the chosen server version
+
+Check the individual plugin releases for tested and supported Minecraft versions.
 
 ### Optional Integrations
 
-| Plugin          | Purpose                       |
-| --------------- | ----------------------------- |
+| Plugin | Purpose |
+| --- | --- |
 | Multiverse-Core | World creation and management |
-| Chunky          | Pregeneration support         |
+| Chunky | Pregeneration support |
 
-Other Paper versions may work but are not officially tested.
+CPVPSingleBiome supports standalone world creation, automatic world loading and world resets without Multiverse-Core.
 
 ---
 
@@ -94,13 +88,29 @@ Features include:
 * WorldBorder restoration
 * Player protection during resets
 * Compatibility with modern Paper world storage
+* Optional world backups
 
-Reset worlds automatically restore:
+Reset worlds automatically restore the configured:
 
-* HARD difficulty
-* SURVIVAL gamemode
-* PvP enabled
-* configured WorldBorder
+* Difficulty
+* Gamemode
+* PvP settings
+* WorldBorder
+
+### World Backup Management
+
+CPVPSingleBiome supports server-side world backups during resets.
+
+* Optional backup creation before world resets
+* Backup support for different Paper world storage layouts
+* Backup preservation if world recreation fails
+* Configurable backup retention
+* Option to keep only the latest backup per world
+* Older backups are removed only after a successful reset when cleanup is enabled
+
+Backups are stored on the Minecraft server under:
+
+`plugins/CPVPSingleBiome/server-world-backups/`
 
 ---
 
@@ -110,8 +120,8 @@ Direct integration with Chunky.
 
 * Automatic pregeneration support
 * Multi-world support
-* Reduced lag spikes after creation
-* Faster deployment of new worlds
+* Reduced lag spikes caused by chunk generation
+* Faster deployment of pregenerated worlds
 
 ---
 
@@ -119,10 +129,14 @@ Direct integration with Chunky.
 
 Manage biome worlds directly from in-game commands.
 
-Examples:
+Features include:
 
 * Create biome worlds
 * Teleport between worlds
+* Automatically load plugin-managed worlds after server restarts
+* Store world information in a dedicated `worlds.yml`
+* Standalone operation without Multiverse-Core
+* Automatic integration with Multiverse-Core when installed
 * View world information
 * Start Chunky pregeneration
 * Reset worlds
@@ -143,6 +157,7 @@ Available settings include:
 * Decoration density
 * World border size
 * Reset schedules
+* World backup settings
 * Chunky settings
 * Biome-specific overrides
 
@@ -205,17 +220,21 @@ Most world generators focus on exploration and survival gameplay.
 
 CPVPSingleBiome was created for Crystal PvP communities that require worlds which are visually interesting while remaining fair, performant and enjoyable for competitive combat.
 
-
 ---
 
+## Download & Source Code
 
----
+CPVPSingleBiome is available on:
 
-## Open Source
+- **[Modrinth](https://modrinth.com/plugin/cpvpsinglebiome)**
+- **[Hangar (PaperMC)](https://hangar.papermc.io/nbohnenkamp-design/CPVPSingleBiome)**
+- **[GitHub Releases](https://github.com/nbohnenkamp-design/cpvpprac/releases)**
 
-CPVPSingleBiome is released under the GPL-3.0-only license.
+CPVPSingleBiome is open source and licensed under **GPL-3.0-only**.
 
-Source code is available on GitHub.
+Developed by **Norbert Bohnenkamp**.
+
+Source code is available on [GitHub](https://github.com/nbohnenkamp-design/cpvpprac).
 
 ---
 
@@ -224,5 +243,3 @@ Source code is available on GitHub.
 This project is not affiliated with Mojang, Microsoft, Minecraft or PaperMC.
 
 Minecraft is a trademark of Microsoft.
-
-
