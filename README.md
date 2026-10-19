@@ -4,7 +4,6 @@ A PvP-focused world generation and arena management plugin for Paper servers.
 
 CPVPSingleBiome creates clean, competitive worlds designed for Crystal PvP, Practice PvP, KitPvP, FFA arenas and events. Unlike traditional survival generators, it focuses on fair combat terrain, automated world resets, fast world deployment and long-term server maintenance.
 
-Originally developed and actively used on **cpvpprac.eu**, a Crystal PvP practice server.
 
 ---
 
@@ -206,19 +205,9 @@ Most world generators focus on exploration and survival gameplay.
 
 CPVPSingleBiome was created for Crystal PvP communities that require worlds which are visually interesting while remaining fair, performant and enjoyable for competitive combat.
 
-The plugin was originally developed for **cpvpprac.eu** and has been tested in real PvP environments before being released as open source.
 
 ---
 
-## Production Usage
-
-CPVPSingleBiome is actively used on:
-
-```text
-cpvpprac.eu
-```
-
-A Crystal PvP practice server focused on open combat arenas and competitive gameplay.
 
 ---
 

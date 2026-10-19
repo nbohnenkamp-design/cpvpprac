@@ -18,6 +18,7 @@ public class CPVPSingleBiomePlugin extends JavaPlugin {
 
     private ConfigManager configManager;
     private ResetManager resetManager;
+    private SavedWorldRegistry savedWorldRegistry;
 
     private int snowAtmosphereTaskId = -1;
 
@@ -31,6 +32,7 @@ public class CPVPSingleBiomePlugin extends JavaPlugin {
         ensureConfigManager();
 
         this.resetManager = new ResetManager(this, this.configManager);
+        this.savedWorldRegistry = new SavedWorldRegistry(this, this.configManager);
 
         PluginCommand command = getCommand("cpvpsb");
 
@@ -64,6 +66,8 @@ public class CPVPSingleBiomePlugin extends JavaPlugin {
         );
 
         startSnowAtmosphereTask();
+
+        getServer().getScheduler().runTask(this, () -> savedWorldRegistry.loadExisting());
 
         getLogger().info(
                 "CPVPSingleBiome v"
@@ -188,6 +192,10 @@ public class CPVPSingleBiomePlugin extends JavaPlugin {
 
             this.configManager = new ConfigManager(this);
         }
+    }
+
+    public SavedWorldRegistry getSavedWorldRegistry() {
+        return savedWorldRegistry;
     }
 
     public ConfigManager getConfigManager() {

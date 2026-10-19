@@ -686,18 +686,60 @@ public class CPVPSBCommand implements CommandExecutor {
         World world;
 
         try {
-            WorldCreator creator = new WorldCreator(worldName);
+            Plugin multiverse = Bukkit.getPluginManager()
+                    .getPlugin("Multiverse-Core");
 
-            creator.generator(
-                    (ChunkGenerator) new SingleBiomeChunkGenerator(
-                            config,
-                            biomeType
-                    )
-            );
+            if (multiverse != null && multiverse.isEnabled()) {
+                String command = "mv create " + worldName
+                        + " normal --generator CPVPSingleBiome:"
+                        + biomeType.getId()
+                        + " --no-structures";
 
-            creator.generateStructures(false);
+                if (!Bukkit.dispatchCommand(
+                        Bukkit.getConsoleSender(),
+                        command
+                )) {
+                    sender.sendMessage(config.getPrefix()
+                            + "§cCould not execute Multiverse creation command.");
+                    return;
+                }
 
-            world = creator.createWorld();
+                final int[] checks = {0};
+
+                Bukkit.getScheduler().runTaskTimer(plugin, task -> {
+                    World createdWorld = Bukkit.getWorld(worldName);
+
+                    if (createdWorld != null) {
+                        task.cancel();
+                        finishCreatedWorld(
+                                sender, worldName, biomeType, createdWorld
+                        );
+                        return;
+                    }
+
+                    if (++checks[0] >= 200) {
+                        task.cancel();
+                        sender.sendMessage(config.getPrefix()
+                                + "§cWorld was not loaded. Check server logs.");
+                    }
+                }, 1L, 1L);
+
+                return;
+
+            } else {
+                WorldCreator creator = new WorldCreator(worldName);
+
+                creator.generator(
+                        (ChunkGenerator) new SingleBiomeChunkGenerator(
+                                config,
+                                biomeType
+                        )
+                );
+
+                creator.generateStructures(false);
+
+                world = creator.createWorld();
+            }
 
         } catch (Throwable t) {
             sender.sendMessage(
@@ -725,6 +767,15 @@ public class CPVPSBCommand implements CommandExecutor {
             return;
         }
 
+        finishCreatedWorld(sender, worldName, biomeType, world);
+    }
+
+    private void finishCreatedWorld(
+            CommandSender sender,
+            String worldName,
+            BiomeType biomeType,
+            World world
+    ) {
         WorldInitListener.applyArenaRules(world);
         applyConfiguredWorldSettings(world);
 
@@ -734,6 +785,8 @@ public class CPVPSBCommand implements CommandExecutor {
             world.getWorldBorder().setSize(borderSize);
             world.getWorldBorder().setCenter(world.getSpawnLocation());
         }
+
+        plugin.getSavedWorldRegistry().remember(worldName, biomeType.getId());
 
         sender.sendMessage(
                 config.getPrefix()

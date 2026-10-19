@@ -168,9 +168,11 @@ reset:
 
   warning-minutes: [10, 5, 1]            # minutes before reset when warnings are sent
 
-  backup-old-worlds: false               # true = move old world folders to backup instead of deleting directly
+  # Backups are stored on the Minecraft server, not on the player's PC.
+  # Backup directory: plugins/CPVPSingleBiome/server-world-backups/
+  backup-old-worlds: false  # true = preserve current world before reset
 
-  delete-old-worlds-after-success: true  # only relevant if backup-old-worlds is true
+  delete-old-worlds-after-success: true  # true = after successful reset keep newest backup, remove older backups
 
   maintenance-during-reset: false        # true = run configured console commands before and after reset
 

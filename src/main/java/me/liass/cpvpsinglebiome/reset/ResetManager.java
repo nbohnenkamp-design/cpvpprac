@@ -52,6 +52,9 @@ public class ResetManager {
     private static final int MAX_WORLD_SETTINGS_WAIT_SECONDS = 90;
     private static final int MAX_WORLD_FOLDER_DELETE_WAIT_SECONDS = 60;
 
+    // Backups created during this reset; delete only after the new world is loaded.
+    private final Map<String, List<Path>> pendingResetBackups = new HashMap<>();
+
     private final Queue<String> chunkyQueue = new ArrayDeque<>();
     private final Map<String, Integer> chunkyWorldLoadRetries = new HashMap<>();
     private String activeChunkyWorld = null;
@@ -808,7 +811,7 @@ public class ResetManager {
 
             Bukkit.unloadWorld(
                     world,
-                    false
+                    config.isBackupOldWorlds()
             );
 
         } else {
@@ -844,7 +847,7 @@ public class ResetManager {
         if (loadedWorld != null) {
             Bukkit.unloadWorld(
                     loadedWorld,
-                    false
+                    config.isBackupOldWorlds()
             );
 
             if (attempt >= MAX_WORLD_FOLDER_DELETE_WAIT_SECONDS) {
@@ -871,57 +874,48 @@ public class ResetManager {
             return;
         }
 
-        Path serverRoot =
-                Bukkit.getWorldContainer()
-                        .toPath();
+        // Never treat an arbitrary path or the main server world as a reset arena.
+        if (worldName == null || !worldName.matches("[A-Za-z0-9_.-]{1,64}")
+                || worldName.equals(".") || worldName.equals("..")
+                || worldName.equalsIgnoreCase("world")
+                || worldName.equalsIgnoreCase(config.getFallbackWorld())) {
+            plugin.getLogger().severe("Unsafe arena reset world name: " + worldName);
+            completion.accept(false);
+            return;
+        }
 
-        Path legacyWorldPath =
-                serverRoot.resolve(worldName);
-
-        Path dimensionWorldPath =
-                serverRoot
-                        .resolve("world")
-                        .resolve("dimensions")
-                        .resolve("minecraft")
-                        .resolve(worldName);
+        Path serverRoot = Bukkit.getWorldContainer().toPath().toAbsolutePath().normalize();
+        Path legacyWorldPath = serverRoot.resolve(worldName).normalize();
+        Path dimensionWorldPath = serverRoot.resolve("world")
+                .resolve("dimensions").resolve("minecraft")
+                .resolve(worldName).normalize();
 
         try {
             if (Files.exists(dimensionWorldPath)) {
-                plugin.getLogger().info(
-                        "Deleting Paper dimension world folder before reset: "
-                                + dimensionWorldPath.toAbsolutePath()
-                );
-
-                deleteDirectory(dimensionWorldPath);
+                if (config.isBackupOldWorlds()) {
+                    Path storedBackup = serverBackupPath(worldName, "dimension");
+                    Files.createDirectories(storedBackup.getParent());
+                    Files.move(dimensionWorldPath, storedBackup);
+                    registerResetBackup(worldName, storedBackup);
+                    plugin.getLogger().info("Preserved Paper dimension world on server: "
+                            + storedBackup.toAbsolutePath());
+                } else {
+                    deleteDirectory(dimensionWorldPath);
+                }
             }
 
             if (Files.exists(legacyWorldPath)) {
                 if (config.isBackupOldWorlds()) {
-                    Path backupPath =
-                            serverRoot.resolve(
-                                    worldName
-                                            + "_old_"
-                                            + System.currentTimeMillis()
-                            );
-
-                    Files.move(
-                            legacyWorldPath,
-                            backupPath
-                    );
-
-                    if (config.isDeleteOldWorldsAfterSuccess()) {
-                        deleteDirectory(
-                                backupPath
-                        );
-                    }
-
+                    Path storedBackup = serverBackupPath(worldName, "legacy");
+                    Files.createDirectories(storedBackup.getParent());
+                    Files.move(legacyWorldPath, storedBackup);
+                    registerResetBackup(worldName, storedBackup);
+                    plugin.getLogger().info("Preserved legacy world on server: "
+                            + storedBackup.toAbsolutePath());
                 } else {
-                    deleteDirectory(
-                            legacyWorldPath
-                    );
+                    deleteDirectory(legacyWorldPath);
                 }
             }
-
         } catch (IOException | RuntimeException e) {
             if (attempt >= MAX_WORLD_FOLDER_DELETE_WAIT_SECONDS) {
                 sender.sendMessage(
@@ -1097,6 +1091,100 @@ public class ResetManager {
         }
     }
 
+    private Path serverBackupPath(String worldName, String layout) {
+        // Stored on the Minecraft server, but outside the live world directories.
+        return plugin.getDataFolder().toPath()
+                .resolve("server-world-backups")
+                .resolve(worldName)
+                .resolve(System.currentTimeMillis() + "-" + layout)
+                .toAbsolutePath().normalize();
+    }
+
+    private void registerResetBackup(String worldName, Path path) {
+        pendingResetBackups.computeIfAbsent(
+                worldName, ignored -> new java.util.ArrayList<>()
+        ).add(path);
+    }
+
+    private void finishResetBackupsAfterSuccess(String worldName, World world) {
+        List<Path> latestBackups = pendingResetBackups.remove(worldName);
+        if (latestBackups == null || latestBackups.isEmpty()) {
+            return;
+        }
+
+        // Without this option, retain ALL backups exactly as before.
+        if (!config.isDeleteOldWorldsAfterSuccess()) {
+            plugin.getLogger().info("Old world backup retained on server for: " + worldName);
+            return;
+        }
+
+        // Never remove an older backup until the replacement world is loaded
+        // and a successful save has been requested.
+        try {
+            world.save();
+        } catch (RuntimeException e) {
+            plugin.getLogger().severe("Could not save new world '" + worldName
+                    + "'; retaining all backups: " + e.getMessage());
+            return;
+        }
+
+        Path backupRoot = plugin.getDataFolder().toPath()
+                .resolve("server-world-backups")
+                .resolve(worldName)
+                .toAbsolutePath().normalize();
+        if (!Files.isDirectory(backupRoot, java.nio.file.LinkOption.NOFOLLOW_LINKS)
+                || Files.isSymbolicLink(backupRoot)) {
+            plugin.getLogger().warning("Backup directory missing or unsafe; no rotation: "
+                    + backupRoot);
+            return;
+        }
+
+        // A single reset can preserve a dimension directory and a legacy
+        // directory. Both belong to the SAME latest snapshot and must survive.
+        Set<Path> newestPaths = new HashSet<>();
+        for (Path backup : latestBackups) {
+            Path normalized = backup.toAbsolutePath().normalize();
+            if (!normalized.getParent().equals(backupRoot)
+                    || !Files.isDirectory(normalized, java.nio.file.LinkOption.NOFOLLOW_LINKS)
+                    || Files.isSymbolicLink(normalized)) {
+                plugin.getLogger().warning("Latest backup cannot be verified; "
+                        + "retaining all backups: " + normalized);
+                return;
+            }
+            newestPaths.add(normalized);
+        }
+
+        // Remove only older, recognized snapshots. Unknown files, folders and
+        // symbolic links are deliberately left untouched.
+        int removed = 0;
+        try (var entries = Files.list(backupRoot)) {
+            for (Path entry : entries.toList()) {
+                Path path = entry.toAbsolutePath().normalize();
+                if (newestPaths.contains(path) || !path.getParent().equals(backupRoot)
+                        || !Files.isDirectory(path, java.nio.file.LinkOption.NOFOLLOW_LINKS)
+                        || Files.isSymbolicLink(path)
+                        || !path.getFileName().toString().matches("\\d+-(dimension|legacy)")) {
+                    continue;
+                }
+                try {
+                    deleteDirectory(path);
+                    removed++;
+                    plugin.getLogger().info("Removed older world backup: " + path);
+                } catch (IOException | RuntimeException e) {
+                    plugin.getLogger().warning("Could not remove older world backup "
+                            + path + ": " + e.getMessage());
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            plugin.getLogger().warning("Cannot inspect existing world backups for "
+                    + worldName + ": " + e.getMessage());
+        }
+
+        plugin.getLogger().info("Retained newest backup snapshot for: " + worldName
+                + " (" + newestPaths.size() + " folder(s)); older backups removed: "
+                + removed);
+    }
+
     private boolean isMultiverseAvailable() {
         org.bukkit.plugin.Plugin multiverse =
                 Bukkit.getPluginManager().getPlugin(
@@ -1118,6 +1206,7 @@ public class ResetManager {
 
         if (world != null) {
             applyConfiguredWorldSettings(world);
+            finishResetBackupsAfterSuccess(worldName, world);
             completion.accept(true);
             return;
         }
